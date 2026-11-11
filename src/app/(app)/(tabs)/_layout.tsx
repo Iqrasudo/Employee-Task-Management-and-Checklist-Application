@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useUnreadCount } from '../../../hooks/useUnreadCount';
 import { colors, fonts } from '../../../theme';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -16,6 +17,8 @@ function TabIcon({ name, focused, color }: { name: IconName; focused: boolean; c
 }
 
 export default function EmployeeTabs() {
+  const unread = useUnreadCount();
+
   return (
     <Tabs
       screenOptions={{
@@ -57,7 +60,7 @@ export default function EmployeeTabs() {
         name="alerts"
         options={{
           title: 'Alerts',
-          tabBarBadge: 3, // later: unread count from GET /api/me/notifications
+          tabBarBadge: unread > 0 ? unread : undefined, // hidden when everything is read
           tabBarIcon: ({ focused, color }) => (
             <TabIcon name={focused ? 'notifications' : 'notifications-outline'} focused={focused} color={color} />
           ),

@@ -10,6 +10,7 @@ import { EmptyState } from '../../../components/ui/EmptyState';
 import { Skeleton, TaskCardSkeleton } from '../../../components/ui/Skeleton';
 import { TaskCard } from '../../../components/tasks/TaskCard';
 import { useAuth } from '../../../context/AuthContext';
+import { useUnreadCount } from '../../../hooks/useUnreadCount';
 import { getDashboard } from '../../../services/tasks';
 import type { Dashboard, Task } from '../../../types/task';
 import { colors, radius, space } from '../../../theme';
@@ -28,6 +29,7 @@ function openTask(task: Task) {
 
 export default function HomeTab() {
   const { user } = useAuth();
+  const unread = useUnreadCount();
   const [data, setData] = useState<Dashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -106,10 +108,10 @@ export default function HomeTab() {
               onPress={() => router.push('/alerts')}
               style={styles.bell}
               accessibilityRole="button"
-              accessibilityLabel="Notifications"
+              accessibilityLabel={unread > 0 ? `Notifications, ${unread} unread` : 'Notifications'}
             >
               <Ionicons name="notifications-outline" size={20} color={colors.onDark} />
-              <View style={styles.bellDot} />
+              {unread > 0 ? <View style={styles.bellDot} /> : null}
             </Pressable>
           </View>
           <AppText variant="small" color={colors.onDarkMuted}>
