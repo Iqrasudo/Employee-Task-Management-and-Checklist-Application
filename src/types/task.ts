@@ -1,7 +1,7 @@
 import type { PriorityKey, StatusKey } from '../theme';
 
 // Shape of a task as the mobile app uses it.
-// Later this comes from GET /api/me/tasks (Tasks + ChecklistItems tables).
+// Later this comes from the API (Tasks, ChecklistItems, Comments, Attachments, TaskActivities tables).
 export type TaskStatus = Exclude<StatusKey, 'overdue'>; // overdue is worked out from the deadline
 
 export type Task = {
@@ -24,6 +24,37 @@ export type Task = {
   currentLevel: number; // 0 = not submitted yet
   reviewerName?: string;
   reviewerNote?: string;
+};
+
+export type ChecklistItem = { id: number; text: string; required: boolean; done: boolean };
+
+export type TaskComment = { id: number; author: string; role: string; body: string; at: string; mine: boolean };
+
+export type FileKind = 'image' | 'pdf' | 'doc' | 'sheet' | 'other';
+
+export type Attachment = {
+  id: number;
+  name: string;
+  kind: FileKind;
+  sizeKb: number;
+  uploadedBy: string;
+  at: string;
+  mine: boolean;
+  uri?: string; // local file on the phone (only for files picked in this session)
+};
+
+export type ActivityItem = { id: number; text: string; at: string };
+
+export type ApprovalDecision = 'approved' | 'current' | 'corrections' | 'waiting';
+
+export type ApprovalStep = { level: number; role: string; name: string; decision: ApprovalDecision };
+
+export type TaskDetail = Task & {
+  checklist: ChecklistItem[];
+  comments: TaskComment[];
+  attachments: Attachment[];
+  activity: ActivityItem[];
+  approvals: ApprovalStep[];
 };
 
 export type Dashboard = {

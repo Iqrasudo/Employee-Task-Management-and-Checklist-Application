@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { AppButton } from '../../../components/ui/AppButton';
 import { AppText } from '../../../components/ui/AppText';
@@ -50,9 +50,10 @@ export default function MyTasksTab() {
   const [filter, setFilter] = useState<FilterKey>('all');
   const [query, setQuery] = useState('');
 
-  const load = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
-    else setLoading(true);
+  // 'initial' shows skeletons, 'refresh' shows the pull spinner, 'silent' updates quietly.
+  const load = useCallback(async (mode: 'initial' | 'refresh' | 'silent' = 'initial') => {
+    if (mode === 'refresh') setRefreshing(true);
+    else if (mode === 'initial') setLoading(true);
     setError(null);
     try {
       setTasks(await getMyTasks());
@@ -64,9 +65,14 @@ export default function MyTasksTab() {
     }
   }, []);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  // Load the first time; quietly refresh when coming back from a task.
+  const loadedOnce = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      load(loadedOnce.current ? 'silent' : 'initial');
+      loadedOnce.current = true;
+    }, [load]),
+  );
 
   const searched = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -157,7 +163,7 @@ export default function MyTasksTab() {
             />
           )}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={() => load(true)} colors={[colors.pine600]} tintColor={colors.pine600} />
+            <RefreshControl refreshing={refreshing} onRefresh={() => load('refresh')} colors={[colors.pine600]} tintColor={colors.pine600} />
           }
           ListEmptyComponent={
             <EmptyState

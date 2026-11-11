@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { setStatusBarStyle } from 'expo-status-bar';
@@ -33,9 +33,10 @@ export default function HomeTab() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
-    else setLoading(true);
+  // 'initial' shows skeletons, 'refresh' shows the pull spinner, 'silent' updates quietly.
+  const load = useCallback(async (mode: 'initial' | 'refresh' | 'silent' = 'initial') => {
+    if (mode === 'refresh') setRefreshing(true);
+    else if (mode === 'initial') setLoading(true);
     setError(null);
     try {
       setData(await getDashboard());
@@ -47,16 +48,16 @@ export default function HomeTab() {
     }
   }, []);
 
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  // Light status bar icons on the dark header; dark icons again when leaving this tab.
+  // Every time this tab is opened: load (first time) or quietly refresh (after visiting a task).
+  // Also: light status bar icons on the dark header, dark icons again when leaving.
+  const loadedOnce = useRef(false);
   useFocusEffect(
     useCallback(() => {
+      load(loadedOnce.current ? 'silent' : 'initial');
+      loadedOnce.current = true;
       setStatusBarStyle('light');
       return () => setStatusBarStyle('dark');
-    }, []),
+    }, [load]),
   );
 
   const firstName = user?.name.split(' ')[0] ?? '';
@@ -79,7 +80,7 @@ export default function HomeTab() {
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={() => load(true)}
+            onRefresh={() => load('refresh')}
             tintColor={colors.onDark}
             colors={[colors.pine600]}
           />
