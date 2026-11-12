@@ -1,23 +1,236 @@
-import React from 'react';
-import { StyleSheet } from 'react-native';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router, useFocusEffect } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { AppButton } from '../../../components/ui/AppButton';
+import { AppText } from '../../../components/ui/AppText';
 import { EmptyState } from '../../../components/ui/EmptyState';
-import { ScreenHeader } from '../../../components/ui/ScreenHeader';
-import { colors, space } from '../../../theme';
+import { Skeleton, TaskCardSkeleton } from '../../../components/ui/Skeleton';
+import { MonthGrid } from '../../../components/calendar/MonthGrid';
+import { TaskCard } from '../../../components/tasks/TaskCard';
+import { getMyTasks } from '../../../services/tasks';
+import type { Task } from '../../../types/task';
+import { colors, radius, space } from '../../../theme';
+import { dateKey, longDate, monthTitle } from '../../../utils/calendar';
+
+const LEGEND = [
+  { label: 'New', color: colors.saffron },
+  { label: 'In progress', color: colors.info },
+  { label: 'To fix', color: colors.warning },
+  { label: 'In review', color: colors.review },
+  { label: 'Approved', color: colors.pine600 },
+  { label: 'Overdue', color: colors.danger },
+];
 
 export default function CalendarTab() {
+  const today = new Date();
+  const [year, setYear] = useState(today.getFullYear());
+  const [month, setMonth] = useState(today.getMonth());
+  const [selected, setSelected] = useState<Date>(today);
+  const [direction, setDirection] = useState<1 | -1>(1);
+
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async (mode: 'initial' | 'refresh' | 'silent' = 'initial') => {
+    if (mode === 'refresh') setRefreshing(true);
+    else if (mode === 'initial') setLoading(true);
+    setError(null);
+    try {
+      setTasks(await getMyTasks()); // later: GET /api/me/tasks/calendar?from=&to=
+    } catch {
+      setError('Could not load your tasks. Check your internet.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  const loadedOnce = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      load(loadedOnce.current ? 'silent' : 'initial');
+      loadedOnce.current = true;
+    }, [load]),
+  );
+
+  // Tasks grouped by their deadline day: { "2026-11-12": [task, task] }
+  const tasksByDay = useMemo(() => {
+    const map: Record<string, Task[]> = {};
+    for (const t of tasks) {
+      const key = dateKey(new Date(t.deadline));
+      (map[key] ??= []).push(t);
+    }
+    return map;
+  }, [tasks]);
+
+  const selectedKey = dateKey(selected);
+  const dayTasks = tasksByDay[selectedKey] ?? [];
+  const monthCount = useMemo(
+    () => tasks.filter((t) => {
+      const d = new Date(t.deadline);
+      return d.getFullYear() === year && d.getMonth() === month;
+    }).length,
+    [tasks, year, month],
+  );
+
+  function changeMonth(step: 1 | -1) {
+    const d = new Date(year, month + step, 1);
+    setDirection(step);
+    setYear(d.getFullYear());
+    setMonth(d.getMonth());
+  }
+
+  function goToday() {
+    const now = new Date();
+    setDirection(now < new Date(year, month, 1) ? -1 : 1);
+    setYear(now.getFullYear());
+    setMonth(now.getMonth());
+    setSelected(now);
+  }
+
+  function selectDay(day: Date) {
+    setSelected(day);
+    // Tapping a grey day from the next/previous month moves to that month.
+    if (day.getMonth() !== month) {
+      setDirection(day < new Date(year, month, 1) ? -1 : 1);
+      setYear(day.getFullYear());
+      setMonth(day.getMonth());
+    }
+  }
+
+  const isTodayShown = year === today.getFullYear() && month === today.getMonth() && selectedKey === dateKey(today);
+
   return (
     <SafeAreaView edges={['top']} style={styles.root}>
-      <ScreenHeader title="Calendar" subtitle="Deadlines" />
-      <EmptyState
-        icon="calendar-outline"
-        title="Calendar comes in step 9"
-        message="Your task deadlines by day, week and month."
-      />
+      <ScrollView
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={() => load('refresh')} colors={[colors.pine600]} tintColor={colors.pine600} />
+        }
+      >
+        <View style={styles.head}>
+          <View style={styles.flex}>
+            <AppText variant="overline" color={colors.muted}>
+              Deadlines
+            </AppText>
+            <AppText variant="h1">{monthTitle(year, month)}</AppText>
+            <AppText variant="caption" color={colors.muted}>
+              {loading ? ' ' : `${monthCount} ${monthCount === 1 ? 'task' : 'tasks'} due this month`}
+            </AppText>
+          </View>
+          <View style={styles.nav}>
+            <Pressable onPress={() => changeMonth(-1)} style={styles.navBtn} accessibilityRole="button" accessibilityLabel="Previous month">
+              <Ionicons name="chevron-back" size={20} color={colors.text} />
+            </Pressable>
+            <Pressable onPress={() => changeMonth(1)} style={styles.navBtn} accessibilityRole="button" accessibilityLabel="Next month">
+              <Ionicons name="chevron-forward" size={20} color={colors.text} />
+            </Pressable>
+          </View>
+        </View>
+
+        {!isTodayShown ? (
+          <Pressable onPress={goToday} style={styles.todayBtn} accessibilityRole="button">
+            <Ionicons name="today-outline" size={16} color={colors.pine600} />
+            <AppText variant="label" color={colors.pine600}>
+              Today
+            </AppText>
+          </Pressable>
+        ) : null}
+
+        {loading ? (
+          <Skeleton height={340} rounded={radius.lg} />
+        ) : (
+          <MonthGrid
+            year={year}
+            month={month}
+            selectedKey={selectedKey}
+            tasksByDay={tasksByDay}
+            onSelect={selectDay}
+            direction={direction}
+          />
+        )}
+
+        <View style={styles.legend} accessibilityLabel="Dot colours">
+          {LEGEND.map((l) => (
+            <View key={l.label} style={styles.legendItem}>
+              <View style={[styles.legendDot, { backgroundColor: l.color }]} />
+              <AppText variant="caption" color={colors.muted}>
+                {l.label}
+              </AppText>
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.dayHead}>
+          <AppText variant="h3">{longDate(selected)}</AppText>
+          <AppText variant="caption" color={colors.muted}>
+            {loading ? '' : `${dayTasks.length} ${dayTasks.length === 1 ? 'task' : 'tasks'}`}
+          </AppText>
+        </View>
+
+        {error ? (
+          <EmptyState
+            icon="cloud-offline-outline"
+            title="Something went wrong"
+            message={error}
+            action={<AppButton title="Try again" onPress={() => load()} style={styles.fullWidth} />}
+          />
+        ) : loading ? (
+          <>
+            <TaskCardSkeleton />
+            <TaskCardSkeleton />
+          </>
+        ) : dayTasks.length > 0 ? (
+          dayTasks.map((t, i) => (
+            <TaskCard
+              key={`${selectedKey}-${t.id}`}
+              task={t}
+              index={i}
+              onPress={() => router.push({ pathname: '/task/[id]', params: { id: String(t.id) } })}
+            />
+          ))
+        ) : (
+          <EmptyState icon="sunny-outline" title="Nothing due on this day" message="Tap a day with dots to see its tasks." />
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.paper, padding: space.lg, gap: space.lg },
+  root: { flex: 1, backgroundColor: colors.paper },
+  flex: { flex: 1 },
+  content: { padding: space.md, paddingTop: space.lg, paddingBottom: space.xxl, gap: space.md },
+  head: { flexDirection: 'row', alignItems: 'flex-end', gap: space.sm, paddingHorizontal: space.xs },
+  nav: { flexDirection: 'row', gap: space.xs },
+  navBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.line,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  todayBtn: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    height: 36,
+    paddingHorizontal: space.sm,
+    borderRadius: radius.pill,
+    backgroundColor: colors.pine100,
+    marginLeft: space.xs,
+  },
+  legend: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, paddingHorizontal: space.xs },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  legendDot: { width: 8, height: 8, borderRadius: 4 },
+  dayHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', paddingHorizontal: space.xs, marginTop: space.xs },
+  fullWidth: { alignSelf: 'stretch', marginTop: space.sm },
 });
