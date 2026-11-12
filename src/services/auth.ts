@@ -13,7 +13,7 @@ export type AuthUser = {
 
 export class AuthError extends Error {}
 
-const MOCK_PASSWORD = 'Password@123';
+let MOCK_PASSWORD = 'Password@123'; // changes when you use "Change password" (until the app restarts)
 
 const MOCK_USERS: AuthUser[] = [
   { id: 12, name: 'Ayesha Khan', email: 'ayesha@company.com', role: 'Employee', department: 'Operations' },
@@ -48,4 +48,12 @@ export async function login(email: string, password: string): Promise<AuthUser> 
     throw new AuthError('Email or password is incorrect.');
   }
   return user;
+}
+
+// Later: POST /api/auth/change-password  { currentPassword, newPassword }
+export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, 900));
+  if (currentPassword !== MOCK_PASSWORD) throw new AuthError('Your current password is not correct.');
+  if (newPassword === currentPassword) throw new AuthError('The new password must be different from the current one.');
+  MOCK_PASSWORD = newPassword;
 }
