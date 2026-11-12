@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 // TEMPORARY mock login. When the ASP.NET Core API is ready, this function
 // will call POST /api/auth/login instead. Screens will not need to change.
 
@@ -25,8 +26,8 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 // Later: POST /api/auth/activate  { email, token, password }
 export async function activateAccount(email: string, token: string, password: string): Promise<void> {
   await wait(900);
-  if (!token) throw new AuthError('This activation link is not valid. Ask HR to send a new one.');
-  if (token === 'expired') throw new AuthError('This activation link has expired. Ask HR to send a new one.');
+  if (!token) throw new AuthError(t('auth.linkInvalid'));
+  if (token === 'expired') throw new AuthError(t('auth.linkExpired'));
   void email;
   void password;
 }
@@ -45,7 +46,7 @@ export async function login(email: string, password: string): Promise<AuthUser> 
 
   // Same message for wrong email or wrong password, so nobody can guess which emails exist.
   if (!user || password !== MOCK_PASSWORD) {
-    throw new AuthError('Email or password is incorrect.');
+    throw new AuthError(t('auth.wrongCredentials'));
   }
   return user;
 }
@@ -53,7 +54,7 @@ export async function login(email: string, password: string): Promise<AuthUser> 
 // Later: POST /api/auth/change-password  { currentPassword, newPassword }
 export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, 900));
-  if (currentPassword !== MOCK_PASSWORD) throw new AuthError('Your current password is not correct.');
-  if (newPassword === currentPassword) throw new AuthError('The new password must be different from the current one.');
+  if (currentPassword !== MOCK_PASSWORD) throw new AuthError(t('auth.currentWrong'));
+  if (newPassword === currentPassword) throw new AuthError(t('auth.sameAsOld'));
   MOCK_PASSWORD = newPassword;
 }

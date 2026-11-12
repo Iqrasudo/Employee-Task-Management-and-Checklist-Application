@@ -1,12 +1,5 @@
 // Helpers for the month calendar. Weeks start on Monday.
-
-export const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
-const MONTHS_LONG = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-];
-const DAYS_LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+import { dayName, monthName, t } from '../i18n';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -16,11 +9,11 @@ export function dateKey(d: Date): string {
 }
 
 export function monthTitle(year: number, month: number): string {
-  return `${MONTHS_LONG[month]} ${year}`;
+  return `${monthName(month)} ${year}`;
 }
 
 export function longDate(d: Date): string {
-  return `${DAYS_LONG[d.getDay()]}, ${d.getDate()} ${MONTHS_LONG[d.getMonth()]}`;
+  return `${dayName(d.getDay())}${t('punct.comma')} ${d.getDate()} ${monthName(d.getMonth())}`;
 }
 
 // 6 rows × 7 days, including the grey days from the months before and after.

@@ -1,13 +1,15 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { colors, fonts, priorityColors, PriorityKey } from '../../theme';
+import { colors, fonts, localFont, priorityColors, PriorityKey } from '../../theme';
+import { t, TKey } from '../../i18n';
 
 // Signal bars: 1 bar = Low … 4 bars = Critical
 export function PriorityBars({ priority, showLabel = true }: { priority: PriorityKey; showLabel?: boolean }) {
   const p = priorityColors[priority];
+  const label = t(`priority.${priority}` as TKey);
 
   return (
-    <View style={styles.row} accessibilityLabel={`${p.label} priority`}>
+    <View style={styles.row} accessibilityLabel={t('priority.a11y', { label })}>
       <View style={styles.bars}>
         {[1, 2, 3, 4].map((i) => (
           <View
@@ -16,7 +18,7 @@ export function PriorityBars({ priority, showLabel = true }: { priority: Priorit
           />
         ))}
       </View>
-      {showLabel ? <Text style={styles.label}>{p.label}</Text> : null}
+      {showLabel ? <Text style={[styles.label, { fontFamily: localFont(fonts.medium) }]}>{label}</Text> : null}
     </View>
   );
 }

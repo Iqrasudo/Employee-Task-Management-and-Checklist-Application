@@ -11,6 +11,7 @@ import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { activateAccount, AuthError } from '../../services/auth';
 import { colors, radius, space } from '../../theme';
 import { isStrongPassword, passwordRules } from '../../utils/password';
+import { t } from '../../i18n';
 
 // Opened from the activation email: /set-password?email=...&token=...
 export default function SetPasswordScreen() {
@@ -29,8 +30,8 @@ export default function SetPasswordScreen() {
   async function handleSave() {
     setFormError(null);
     const next: typeof errors = {};
-    if (!isStrongPassword(password)) next.password = 'Your password does not meet all the rules below.';
-    if (confirm !== password) next.confirm = 'The two passwords do not match.';
+    if (!isStrongPassword(password)) next.password = t('setpw.weak');
+    if (confirm !== password) next.confirm = t('setpw.mismatch');
     setErrors(next);
     if (Object.keys(next).length) return;
 
@@ -39,7 +40,7 @@ export default function SetPasswordScreen() {
       await activateAccount(email, token, password);
       setDone(true);
     } catch (e) {
-      setFormError(e instanceof AuthError ? e.message : 'Could not connect. Check your internet and try again.');
+      setFormError(e instanceof AuthError ? e.message : t('common.noConnection'));
     } finally {
       setLoading(false);
     }
@@ -51,9 +52,9 @@ export default function SetPasswordScreen() {
         <View style={styles.doneWrap}>
           <EmptyState
             icon="checkmark-circle-outline"
-            title="Your account is ready"
-            message="Your password is set. Sign in with your work email and new password."
-            action={<AppButton title="Go to sign in" onPress={() => router.replace('/login')} style={styles.fullWidth} />}
+            title={t('setpw.doneTitle')}
+            message={t('setpw.doneMessage')}
+            action={<AppButton title={t('setpw.goToSignIn')} onPress={() => router.replace('/login')} style={styles.fullWidth} />}
           />
         </View>
       </SafeAreaView>
@@ -64,12 +65,12 @@ export default function SetPasswordScreen() {
     <SafeAreaView style={styles.root}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <ScreenHeader title="Set your password" subtitle="Activate account" showBack />
+          <ScreenHeader title={t('setpw.title')} subtitle={t('setpw.subtitle')} showBack />
 
           <View style={styles.emailBox}>
             <Ionicons name="mail-outline" size={18} color={colors.pine600} />
             <AppText variant="small" style={styles.flex}>
-              {email || 'Email from your activation link'}
+              {email || t('setpw.emailFallback')}
             </AppText>
           </View>
 
@@ -83,13 +84,13 @@ export default function SetPasswordScreen() {
           ) : null}
 
           <AppTextInput
-            label="New password"
-            placeholder="Create a password"
+            label={t('auth.newPassword')}
+            placeholder={t('setpw.newPlaceholder')}
             leftIcon="lock-closed-outline"
             password
             value={password}
-            onChangeText={(t) => {
-              setPassword(t);
+            onChangeText={(v) => {
+              setPassword(v);
               if (errors.password) setErrors((e) => ({ ...e, password: undefined }));
             }}
             error={errors.password}
@@ -101,7 +102,7 @@ export default function SetPasswordScreen() {
             editable={!loading}
           />
 
-          <View style={styles.rules} accessibilityLabel="Password rules">
+          <View style={styles.rules} accessibilityLabel={t('auth.rulesLabel')}>
             {passwordRules.map((rule) => {
               const ok = rule.test(password);
               return (
@@ -121,13 +122,13 @@ export default function SetPasswordScreen() {
 
           <AppTextInput
             ref={confirmRef}
-            label="Confirm password"
-            placeholder="Type it again"
+            label={t('setpw.confirm')}
+            placeholder={t('setpw.confirmPlaceholder')}
             leftIcon="lock-closed-outline"
             password
             value={confirm}
-            onChangeText={(t) => {
-              setConfirm(t);
+            onChangeText={(v) => {
+              setConfirm(v);
               if (errors.confirm) setErrors((e) => ({ ...e, confirm: undefined }));
             }}
             error={errors.confirm}
@@ -137,7 +138,7 @@ export default function SetPasswordScreen() {
             editable={!loading}
           />
 
-          <AppButton title="Save password" onPress={handleSave} loading={loading} />
+          <AppButton title={t('setpw.save')} onPress={handleSave} loading={loading} />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

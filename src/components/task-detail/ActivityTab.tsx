@@ -5,6 +5,7 @@ import { AppText } from '../ui/AppText';
 import type { TaskDetail } from '../../types/task';
 import { colors, fonts, radius, space } from '../../theme';
 import { timeAgo } from '../../utils/time';
+import { t } from '../../i18n';
 
 type Props = {
   task: TaskDetail;
@@ -37,11 +38,11 @@ export function ActivityTab({ task, sending, onSend }: Props) {
         <TextInput
           value={draft}
           onChangeText={setDraft}
-          placeholder="Write a comment…"
+          placeholder={t('activity.placeholder')}
           placeholderTextColor={colors.muted}
           multiline
           style={styles.input}
-          accessibilityLabel="Write a comment"
+          accessibilityLabel={t('activity.write')}
           editable={!sending}
         />
         <Pressable
@@ -49,7 +50,7 @@ export function ActivityTab({ task, sending, onSend }: Props) {
           disabled={!draft.trim() || sending}
           style={[styles.send, !draft.trim() ? styles.sendOff : null]}
           accessibilityRole="button"
-          accessibilityLabel="Send comment"
+          accessibilityLabel={t('activity.send')}
         >
           {sending ? <ActivityIndicator color={colors.onDark} /> : <Ionicons name="send" size={18} color={colors.onDark} />}
         </Pressable>
@@ -59,7 +60,7 @@ export function ActivityTab({ task, sending, onSend }: Props) {
         e.type === 'comment' ? (
           <View key={e.key} style={[styles.bubble, e.mine ? styles.mine : null]}>
             <View style={styles.bubbleHead}>
-              <AppText variant="label">{e.mine ? 'You' : e.author}</AppText>
+              <AppText variant="label">{e.mine ? t('common.you') : e.author}</AppText>
               <AppText variant="caption" color={colors.muted}>
                 {e.mine ? '' : `${e.role} · `}
                 {timeAgo(e.at)}

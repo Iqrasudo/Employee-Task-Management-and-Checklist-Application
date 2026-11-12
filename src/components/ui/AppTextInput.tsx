@@ -1,7 +1,8 @@
 import React, { forwardRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, TextInputProps, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fonts, radius, space, text } from '../../theme';
+import { colors, fonts, localFont, radius, space, text } from '../../theme';
+import { t } from '../../i18n';
 
 type Props = TextInputProps & {
   label: string;
@@ -22,7 +23,7 @@ export const AppTextInput = forwardRef<TextInput, Props>(function AppTextInput(
 
   return (
     <View style={styles.wrap}>
-      <Text style={[text.label, { color: colors.text }]}>{label}</Text>
+      <Text style={[text.label, { color: colors.text, fontFamily: localFont(text.label.fontFamily) }]}>{label}</Text>
 
       <View style={[styles.field, { borderColor }, error ? styles.fieldError : null]}>
         {leftIcon ? (
@@ -51,7 +52,7 @@ export const AppTextInput = forwardRef<TextInput, Props>(function AppTextInput(
             onPress={() => setHidden((h) => !h)}
             hitSlop={12}
             accessibilityRole="button"
-            accessibilityLabel={hidden ? 'Show password' : 'Hide password'}
+            accessibilityLabel={hidden ? t('auth.showPassword') : t('auth.hidePassword')}
           >
             <Ionicons name={hidden ? 'eye-outline' : 'eye-off-outline'} size={20} color={colors.muted} />
           </Pressable>

@@ -4,26 +4,27 @@ import { AppText } from '../ui/AppText';
 import type { TaskDetail } from '../../types/task';
 import { colors, radius, space } from '../../theme';
 import { formatDate, formatTime } from '../../utils/date';
+import { t } from '../../i18n';
 
 export function DetailsTab({ task }: { task: TaskDetail }) {
   const start = new Date(task.startDate);
   const deadline = new Date(task.deadline);
 
   const rows: [string, string][] = [
-    ['Assigned by', task.createdBy],
-    ['Task type', task.taskType],
-    ['Department', task.department],
-    ['Start', `${formatDate(start)}, ${formatTime(start)}`],
-    ['Deadline', `${formatDate(deadline)}, ${formatTime(deadline)}`],
-    ['Approval levels', String(task.approvalLevels)],
-    ['Task number', task.number],
+    [t('detail.assignedBy'), task.createdBy],
+    [t('detail.taskType'), task.taskType],
+    [t('common.department'), task.department],
+    [t('detail.start'), `${formatDate(start)}, ${formatTime(start)}`],
+    [t('detail.deadline'), `${formatDate(deadline)}, ${formatTime(deadline)}`],
+    [t('detail.levels'), String(task.approvalLevels)],
+    [t('detail.number'), task.number],
   ];
 
   return (
     <View style={styles.wrap}>
       <View style={styles.card}>
         <AppText variant="overline" color={colors.muted}>
-          Description
+          {t('detail.description')}
         </AppText>
         <AppText variant="body">{task.description}</AppText>
       </View>

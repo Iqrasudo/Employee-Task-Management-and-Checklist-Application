@@ -1,7 +1,6 @@
 import type { Task } from '../types/task';
+import { dayName, monthShort, t } from '../i18n';
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export function startOfDay(d: Date): Date {
@@ -13,15 +12,15 @@ export function startOfDay(d: Date): Date {
 export function formatTime(d: Date): string {
   const minutes = String(d.getMinutes()).padStart(2, '0');
   const hours = d.getHours() % 12 || 12;
-  return `${hours}:${minutes} ${d.getHours() >= 12 ? 'PM' : 'AM'}`;
+  return `${hours}:${minutes} ${d.getHours() >= 12 ? t('time.pm') : t('time.am')}`;
 }
 
 export function formatDate(d: Date): string {
-  return `${d.getDate()} ${MONTHS[d.getMonth()]}`;
+  return `${d.getDate()} ${monthShort(d.getMonth())}`;
 }
 
 export function friendlyToday(d = new Date()): string {
-  return `${DAYS[d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()]}`;
+  return `${dayName(d.getDay())}${t('punct.comma')} ${d.getDate()} ${monthShort(d.getMonth())}`;
 }
 
 // Whole days between today and the date (negative = in the past)
@@ -43,13 +42,13 @@ export type DueTone = 'danger' | 'warning' | 'muted';
 
 export function dueLabel(task: Pick<Task, 'deadline' | 'status'>): { text: string; tone: DueTone } {
   const d = new Date(task.deadline);
-  if (task.status === 'approved') return { text: `Done · ${formatDate(d)}`, tone: 'muted' };
+  if (task.status === 'approved') return { text: t('due.done', { date: formatDate(d) }), tone: 'muted' };
   if (isOverdue(task)) {
     const days = -dayDiff(task.deadline);
-    return { text: days === 0 ? 'Overdue today' : `Overdue ${days}d`, tone: 'danger' };
+    return { text: days === 0 ? t('due.overdueToday') : t('due.overdueDays', { n: days }), tone: 'danger' };
   }
   const diff = dayDiff(task.deadline);
-  if (diff === 0) return { text: `Today ${formatTime(d)}`, tone: 'warning' };
-  if (diff === 1) return { text: `Tomorrow ${formatTime(d)}`, tone: 'warning' };
-  return { text: `Due ${formatDate(d)}`, tone: 'muted' };
+  if (diff === 0) return { text: t('due.today', { time: formatTime(d) }), tone: 'warning' };
+  if (diff === 1) return { text: t('due.tomorrow', { time: formatTime(d) }), tone: 'warning' };
+  return { text: t('due.on', { date: formatDate(d) }), tone: 'muted' };
 }

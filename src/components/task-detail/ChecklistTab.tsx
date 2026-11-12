@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
 import type { TaskDetail } from '../../types/task';
 import { colors, radius, space } from '../../theme';
+import { t } from '../../i18n';
 
 type Props = {
   task: TaskDetail;
@@ -16,21 +17,21 @@ export function ChecklistTab({ task, editable, onToggle }: Props) {
   const total = task.checklist.length;
 
   const lockedReason = task.isNew
-    ? 'Accept the task to start ticking items.'
+    ? t('check.lockedNew')
     : task.status === 'pendingReview'
-      ? 'Locked while the task is being reviewed.'
+      ? t('check.lockedReview')
       : task.status === 'approved'
-        ? 'This task is approved and closed.'
+        ? t('check.lockedApproved')
         : null;
 
   return (
     <View style={styles.wrap}>
       <View style={styles.progressHead}>
         <AppText variant="label">
-          {done} of {total} done
+          {t('check.progress', { done, total })}
         </AppText>
         <AppText variant="caption" color={colors.muted}>
-          Items marked Required must be done before you submit
+          {t('check.hint')}
         </AppText>
       </View>
       <View style={styles.track}>
@@ -54,7 +55,7 @@ export function ChecklistTab({ task, editable, onToggle }: Props) {
             onPress={() => onToggle(item.id)}
             accessibilityRole="checkbox"
             accessibilityState={{ checked: item.done, disabled: !editable }}
-            accessibilityLabel={`${item.text}${item.required ? ', required' : ''}`}
+            accessibilityLabel={`${item.text}${item.required ? t('check.requiredA11y') : ''}`}
             style={({ pressed }) => [styles.row, i < task.checklist.length - 1 ? styles.line : null, pressed ? styles.pressed : null]}
           >
             <View style={[styles.box, item.done ? styles.boxOn : null, !editable && !item.done ? styles.boxLocked : null]}>
@@ -69,7 +70,7 @@ export function ChecklistTab({ task, editable, onToggle }: Props) {
             </AppText>
             {item.required ? (
               <AppText variant="caption" color={item.done ? colors.muted : colors.warning}>
-                Required
+                {t('check.required')}
               </AppText>
             ) : null}
           </Pressable>

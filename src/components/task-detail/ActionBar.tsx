@@ -7,6 +7,7 @@ import { AppText } from '../ui/AppText';
 import type { TaskDetail } from '../../types/task';
 import { colors, radius, space } from '../../theme';
 import { canEdit, canWithdraw } from '../../services/tasks';
+import { t, tn } from '../../i18n';
 
 type Props = {
   task: TaskDetail;
@@ -29,17 +30,17 @@ export function ActionBar({ task, busy, onAccept, onDecline, onSubmit, onWithdra
   if (task.isNew) {
     content = (
       <View style={styles.row}>
-        <AppButton title="Decline" variant="secondary" onPress={onDecline} disabled={!!busy} style={styles.flex} />
-        <AppButton title="Accept" onPress={onAccept} loading={busy === 'accept'} disabled={!!busy} style={styles.flex} />
+        <AppButton title={t('action.decline')} variant="secondary" onPress={onDecline} disabled={!!busy} style={styles.flex} />
+        <AppButton title={t('action.accept')} onPress={onAccept} loading={busy === 'accept'} disabled={!!busy} style={styles.flex} />
       </View>
     );
   } else if (canEdit(task)) {
     const label =
       requiredLeft > 0
-        ? `Finish ${requiredLeft} required ${requiredLeft === 1 ? 'item' : 'items'}`
+        ? t('action.finish', { items: tn('count.required', requiredLeft) })
         : task.status === 'corrections'
-          ? 'Resubmit for review'
-          : 'Submit for review';
+          ? t('action.resubmit')
+          : t('action.submit');
     content = (
       <View style={styles.row}>
         <Pressable
@@ -47,7 +48,7 @@ export function ActionBar({ task, busy, onAccept, onDecline, onSubmit, onWithdra
           disabled={!!busy}
           style={styles.iconBtn}
           accessibilityRole="button"
-          accessibilityLabel="Add file"
+          accessibilityLabel={t('files.add')}
         >
           <Ionicons name="attach" size={22} color={colors.text} />
         </Pressable>
@@ -60,11 +61,13 @@ export function ActionBar({ task, busy, onAccept, onDecline, onSubmit, onWithdra
         <View style={styles.info}>
           <Ionicons name="time-outline" size={18} color={colors.review} />
           <AppText variant="small" color={colors.review} style={styles.flex}>
-            Waiting for {current ? `${current.name} (${current.role}, level ${current.level})` : 'review'}
+            {current
+              ? t('action.waitingFor', { name: current.name, role: current.role, level: current.level })
+              : t('action.waitingReview')}
           </AppText>
         </View>
         {canWithdraw(task) ? (
-          <AppButton title="Withdraw submission" variant="secondary" onPress={onWithdraw} loading={busy === 'withdraw'} disabled={!!busy} />
+          <AppButton title={t('action.withdraw')} variant="secondary" onPress={onWithdraw} loading={busy === 'withdraw'} disabled={!!busy} />
         ) : null}
       </View>
     );
@@ -73,7 +76,7 @@ export function ActionBar({ task, busy, onAccept, onDecline, onSubmit, onWithdra
       <View style={styles.info}>
         <Ionicons name="checkmark-circle" size={18} color={colors.pine600} />
         <AppText variant="small" color={colors.pine600}>
-          Approved at every level. Nothing more to do.
+          {t('action.allApproved')}
         </AppText>
       </View>
     );

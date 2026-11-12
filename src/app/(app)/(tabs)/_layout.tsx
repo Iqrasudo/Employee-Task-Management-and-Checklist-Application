@@ -3,7 +3,8 @@ import { StyleSheet, View } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useUnreadCount } from '../../../hooks/useUnreadCount';
-import { colors, fonts } from '../../../theme';
+import { colors, fonts, localFont } from '../../../theme';
+import { t } from '../../../i18n';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -25,7 +26,7 @@ export default function EmployeeTabs() {
         headerShown: false,
         tabBarActiveTintColor: colors.pine600,
         tabBarInactiveTintColor: colors.muted,
-        tabBarLabelStyle: { fontFamily: fonts.semibold, fontSize: 11 },
+        tabBarLabelStyle: { fontFamily: localFont(fonts.semibold), fontSize: 11 },
         tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.line, height: 68, paddingTop: 6 },
         tabBarBadgeStyle: { backgroundColor: colors.saffron, color: colors.pine900, fontFamily: fonts.semibold, fontSize: 11 },
         animation: 'shift',
@@ -34,14 +35,14 @@ export default function EmployeeTabs() {
       <Tabs.Screen
         name="home"
         options={{
-          title: 'Home',
+          title: t('tabs.home'),
           tabBarIcon: ({ focused, color }) => <TabIcon name={focused ? 'home' : 'home-outline'} focused={focused} color={color} />,
         }}
       />
       <Tabs.Screen
         name="my-tasks"
         options={{
-          title: 'My Tasks',
+          title: t('tabs.myTasks'),
           tabBarIcon: ({ focused, color }) => (
             <TabIcon name={focused ? 'checkbox' : 'checkbox-outline'} focused={focused} color={color} />
           ),
@@ -50,7 +51,7 @@ export default function EmployeeTabs() {
       <Tabs.Screen
         name="calendar"
         options={{
-          title: 'Calendar',
+          title: t('tabs.calendar'),
           tabBarIcon: ({ focused, color }) => (
             <TabIcon name={focused ? 'calendar' : 'calendar-outline'} focused={focused} color={color} />
           ),
@@ -59,7 +60,7 @@ export default function EmployeeTabs() {
       <Tabs.Screen
         name="alerts"
         options={{
-          title: 'Alerts',
+          title: t('tabs.alerts'),
           tabBarBadge: unread > 0 ? unread : undefined, // hidden when everything is read
           tabBarIcon: ({ focused, color }) => (
             <TabIcon name={focused ? 'notifications' : 'notifications-outline'} focused={focused} color={color} />
@@ -69,7 +70,7 @@ export default function EmployeeTabs() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: t('tabs.profile'),
           tabBarIcon: ({ focused, color }) => (
             <TabIcon name={focused ? 'person' : 'person-outline'} focused={focused} color={color} />
           ),

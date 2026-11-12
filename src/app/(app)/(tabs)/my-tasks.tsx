@@ -13,14 +13,15 @@ import { getMyTasks } from '../../../services/tasks';
 import type { Task } from '../../../types/task';
 import { colors, fonts, radius, space } from '../../../theme';
 import { isOverdue } from '../../../utils/date';
+import { t, tn } from '../../../i18n';
 
 const FILTERS = [
-  { key: 'all', label: 'All' },
-  { key: 'new', label: 'New' },
-  { key: 'progress', label: 'In progress' },
-  { key: 'fix', label: 'To fix' },
-  { key: 'review', label: 'Submitted' },
-  { key: 'done', label: 'Done' },
+  { key: 'all', label: 'filter.all' },
+  { key: 'new', label: 'filter.new' },
+  { key: 'progress', label: 'filter.progress' },
+  { key: 'fix', label: 'filter.fix' },
+  { key: 'review', label: 'filter.review' },
+  { key: 'done', label: 'filter.done' },
 ] as const;
 
 type FilterKey = (typeof FILTERS)[number]['key'];
@@ -58,7 +59,7 @@ export default function MyTasksTab() {
     try {
       setTasks(await getMyTasks());
     } catch {
-      setError('Could not load your tasks. Check your internet.');
+      setError(t('common.loadTasksError'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -85,22 +86,22 @@ export default function MyTasksTab() {
   return (
     <SafeAreaView edges={['top']} style={styles.root}>
       <View style={styles.top}>
-        <ScreenHeader title="My Tasks" subtitle={loading ? 'Loading…' : `${tasks.length} tasks`} />
+        <ScreenHeader title={t('tabs.myTasks')} subtitle={loading ? t('common.loading') : tn('count.tasks', tasks.length)} />
 
         <View style={styles.search}>
           <Ionicons name="search" size={18} color={colors.muted} />
           <TextInput
             value={query}
             onChangeText={setQuery}
-            placeholder="Search by title or number"
+            placeholder={t('mytasks.search')}
             placeholderTextColor={colors.muted}
             style={styles.searchInput}
-            accessibilityLabel="Search tasks"
+            accessibilityLabel={t('mytasks.searchA11y')}
             returnKeyType="search"
             autoCorrect={false}
           />
           {query ? (
-            <Pressable onPress={() => setQuery('')} hitSlop={10} accessibilityRole="button" accessibilityLabel="Clear search">
+            <Pressable onPress={() => setQuery('')} hitSlop={10} accessibilityRole="button" accessibilityLabel={t('common.clearSearch')}>
               <Ionicons name="close-circle" size={18} color={colors.muted} />
             </Pressable>
           ) : null}
@@ -126,7 +127,7 @@ export default function MyTasksTab() {
               style={[styles.chip, selected ? styles.chipOn : null]}
             >
               <AppText variant="label" color={selected ? colors.onDark : colors.text} style={styles.chipText}>
-                {f.label}
+                {t(f.label)}
                 {loading ? '' : ` · ${count}`}
               </AppText>
             </Pressable>
@@ -145,9 +146,9 @@ export default function MyTasksTab() {
         <View style={styles.list}>
           <EmptyState
             icon="cloud-offline-outline"
-            title="Something went wrong"
+            title={t('common.errorTitle')}
             message={error}
-            action={<AppButton title="Try again" onPress={() => load()} style={styles.fullWidth} />}
+            action={<AppButton title={t('common.tryAgain')} onPress={() => load()} style={styles.fullWidth} />}
           />
         </View>
       ) : (
@@ -168,8 +169,8 @@ export default function MyTasksTab() {
           ListEmptyComponent={
             <EmptyState
               icon={query ? 'search-outline' : 'checkmark-done-outline'}
-              title={query ? 'No matching tasks' : 'Nothing here'}
-              message={query ? `No task matches “${query}”.` : 'No tasks in this list right now.'}
+              title={query ? t('mytasks.noMatch') : t('mytasks.empty')}
+              message={query ? t('mytasks.noMatchMsg', { q: query }) : t('mytasks.emptyMsg')}
             />
           }
         />

@@ -1,6 +1,7 @@
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import type { FileKind } from '../types/task';
+import { t } from '../i18n';
 
 export type PickedFile = { name: string; kind: FileKind; sizeKb: number; uri: string };
 
@@ -25,13 +26,13 @@ export function formatSize(kb: number): string {
 // The backend checks this again; the app checks first so the user hears about it straight away.
 function check(name: string, sizeBytes?: number | null) {
   const ext = name.split('.').pop()?.toLowerCase() ?? '';
-  if (!ALLOWED.includes(ext)) throw new FilePickError('This file type is not allowed. Use PDF, Word, Excel or a photo.');
-  if (sizeBytes && sizeBytes > MAX_FILE_MB * 1024 * 1024) throw new FilePickError(`This file is larger than ${MAX_FILE_MB} MB.`);
+  if (!ALLOWED.includes(ext)) throw new FilePickError(t('files.typeNotAllowed'));
+  if (sizeBytes && sizeBytes > MAX_FILE_MB * 1024 * 1024) throw new FilePickError(t('files.tooBig', { mb: MAX_FILE_MB }));
 }
 
 export async function takePhoto(): Promise<PickedFile | null> {
   const perm = await ImagePicker.requestCameraPermissionsAsync();
-  if (!perm.granted) throw new FilePickError('Allow camera access in your phone settings to take a photo.');
+  if (!perm.granted) throw new FilePickError(t('files.cameraPermission'));
   const result = await ImagePicker.launchCameraAsync({ quality: 0.7 });
   if (result.canceled) return null;
   const a = result.assets[0];

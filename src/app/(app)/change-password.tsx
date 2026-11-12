@@ -11,6 +11,7 @@ import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { AuthError, changePassword } from '../../services/auth';
 import { colors, radius, space } from '../../theme';
 import { isStrongPassword, passwordRules } from '../../utils/password';
+import { t } from '../../i18n';
 
 type Errors = { current?: string; next?: string; confirm?: string };
 
@@ -28,9 +29,9 @@ export default function ChangePasswordScreen() {
   async function save() {
     setFormError(null);
     const e: Errors = {};
-    if (!current) e.current = 'Enter your current password.';
-    if (!isStrongPassword(next)) e.next = 'The new password does not meet all the rules below.';
-    if (confirm !== next) e.confirm = 'The two new passwords do not match.';
+    if (!current) e.current = t('cpw.currentRequired');
+    if (!isStrongPassword(next)) e.next = t('cpw.weak');
+    if (confirm !== next) e.confirm = t('cpw.mismatch');
     setErrors(e);
     if (Object.keys(e).length) return;
 
@@ -39,7 +40,7 @@ export default function ChangePasswordScreen() {
       await changePassword(current, next);
       setDone(true);
     } catch (err) {
-      setFormError(err instanceof AuthError ? err.message : 'Could not connect. Check your internet and try again.');
+      setFormError(err instanceof AuthError ? err.message : t('common.noConnection'));
     } finally {
       setLoading(false);
     }
@@ -51,9 +52,9 @@ export default function ChangePasswordScreen() {
         <View style={styles.doneWrap}>
           <EmptyState
             icon="shield-checkmark-outline"
-            title="Password changed"
-            message="Use your new password the next time you sign in. Other phones signed in to your account are signed out."
-            action={<AppButton title="Back to profile" onPress={() => router.back()} style={styles.fullWidth} />}
+            title={t('cpw.doneTitle')}
+            message={t('cpw.doneMsg')}
+            action={<AppButton title={t('cpw.back')} onPress={() => router.back()} style={styles.fullWidth} />}
           />
         </View>
       </SafeAreaView>
@@ -66,7 +67,7 @@ export default function ChangePasswordScreen() {
     <SafeAreaView style={styles.root}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <ScreenHeader title="Change password" subtitle="Account" showBack />
+          <ScreenHeader title={t('cpw.title')} subtitle={t('profile.account')} showBack />
 
           {formError ? (
             <View style={styles.alert} accessibilityRole="alert">
@@ -78,12 +79,12 @@ export default function ChangePasswordScreen() {
           ) : null}
 
           <AppTextInput
-            label="Current password"
+            label={t('cpw.current')}
             leftIcon="lock-closed-outline"
             password
             value={current}
-            onChangeText={(t) => {
-              setCurrent(t);
+            onChangeText={(v) => {
+              setCurrent(v);
               clear('current');
             }}
             error={errors.current}
@@ -97,12 +98,12 @@ export default function ChangePasswordScreen() {
 
           <AppTextInput
             ref={nextRef}
-            label="New password"
+            label={t('auth.newPassword')}
             leftIcon="key-outline"
             password
             value={next}
-            onChangeText={(t) => {
-              setNext(t);
+            onChangeText={(v) => {
+              setNext(v);
               clear('next');
             }}
             error={errors.next}
@@ -130,12 +131,12 @@ export default function ChangePasswordScreen() {
 
           <AppTextInput
             ref={confirmRef}
-            label="Confirm new password"
+            label={t('cpw.confirm')}
             leftIcon="key-outline"
             password
             value={confirm}
-            onChangeText={(t) => {
-              setConfirm(t);
+            onChangeText={(v) => {
+              setConfirm(v);
               clear('confirm');
             }}
             error={errors.confirm}
@@ -145,7 +146,7 @@ export default function ChangePasswordScreen() {
             editable={!loading}
           />
 
-          <AppButton title="Save new password" onPress={save} loading={loading} />
+          <AppButton title={t('cpw.save')} onPress={save} loading={loading} />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

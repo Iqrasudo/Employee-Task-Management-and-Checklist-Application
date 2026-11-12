@@ -34,11 +34,12 @@ import type { TaskDetail } from '../../../types/task';
 import { colors, radius, space } from '../../../theme';
 import { dueLabel, isOverdue } from '../../../utils/date';
 import { FilePickError, pickDocument, pickFromGallery, PickedFile, takePhoto } from '../../../utils/files';
+import { chevron, t } from '../../../i18n';
 
 type TabKey = 'details' | 'checklist' | 'files' | 'activity';
 type SheetKey = 'decline' | 'submit' | 'withdraw' | 'attach' | null;
 
-const errorText = (e: unknown) => (e instanceof Error ? e.message : 'Something went wrong. Please try again.');
+const errorText = (e: unknown) => (e instanceof Error ? e.message : t('common.genericError'));
 
 export default function TaskDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -68,7 +69,7 @@ export default function TaskDetailScreen() {
       await reload();
       setToast(success);
     } catch (e) {
-      Alert.alert('Could not do that', errorText(e));
+      Alert.alert(t('task.alert.failed'), errorText(e));
     } finally {
       setBusy(null);
     }
@@ -89,7 +90,7 @@ export default function TaskDetailScreen() {
       await toggleChecklistItem(taskId, itemId);
     } catch (e) {
       setTask(before);
-      Alert.alert('Could not update the checklist', errorText(e));
+      Alert.alert(t('task.alert.checklistFailed'), errorText(e));
     }
   }
 
@@ -99,9 +100,9 @@ export default function TaskDetailScreen() {
       const assignedBy = await declineTask(taskId, reason);
       setSheet(null);
       router.back();
-      Alert.alert('Task declined', `${assignedBy} has been told and can give it to someone else.`);
+      Alert.alert(t('task.declinedTitle'), t('task.declinedMsg', { name: assignedBy }));
     } catch (e) {
-      Alert.alert('Could not decline', errorText(e));
+      Alert.alert(t('task.alert.declineFailed'), errorText(e));
     } finally {
       setBusy(null);
     }
@@ -114,7 +115,7 @@ export default function TaskDetailScreen() {
       await reload();
       return true;
     } catch (e) {
-      Alert.alert('Comment not sent', errorText(e));
+      Alert.alert(t('task.alert.commentFailed'), errorText(e));
       return false;
     } finally {
       setBusy(null);
@@ -130,9 +131,9 @@ export default function TaskDetailScreen() {
         const file: PickedFile | null = await picker();
         if (!file) return; // user cancelled
         setTab('files');
-        await run('attach', () => addAttachment(taskId, file), 'File added');
+        await run('attach', () => addAttachment(taskId, file), t('task.toast.fileAdded'));
       } catch (e) {
-        Alert.alert(e instanceof FilePickError ? 'File not added' : 'Could not open', errorText(e));
+        Alert.alert(e instanceof FilePickError ? t('task.alert.fileFailed') : t('task.alert.openFailed'), errorText(e));
       }
     }, 350);
   }
@@ -158,7 +159,7 @@ export default function TaskDetailScreen() {
       <SafeAreaView style={styles.root}>
         <View style={styles.loading}>
           <BackButton />
-          <EmptyState icon="alert-circle-outline" title="This task is not available" message="It may have been reassigned or removed." />
+          <EmptyState icon="alert-circle-outline" title={t('task.notAvailableTitle')} message={t('task.notAvailableMsg')} />
         </View>
       </SafeAreaView>
     );
@@ -172,10 +173,10 @@ export default function TaskDetailScreen() {
   const reviewer = task.approvals.find((a) => a.decision === 'corrections');
 
   const tabs: { key: TabKey; label: string }[] = [
-    { key: 'details', label: 'Details' },
-    { key: 'checklist', label: `Checklist ${task.checklistDone}/${task.checklist.length}` },
-    { key: 'files', label: `Files ${task.attachments.length}` },
-    { key: 'activity', label: 'Activity' },
+    { key: 'details', label: t('task.tab.details') },
+    { key: 'checklist', label: t('task.tab.checklist', { done: task.checklistDone, total: task.checklist.length }) },
+    { key: 'files', label: t('task.tab.files', { n: task.attachments.length }) },
+    { key: 'activity', label: t('task.tab.activity') },
   ];
 
   return (
@@ -205,7 +206,7 @@ export default function TaskDetailScreen() {
           <ProgressRing progress={progress} size={60} stroke={5} color={colors.saffron} track={colors.pine700} labelColor={colors.onDark} />
           <View style={styles.heroBody}>
             <AppText variant="caption" color={colors.onDarkMuted}>
-              Approval ladder
+              {t('task.ladder')}
             </AppText>
             <ApprovalLadder steps={task.approvals} />
           </View>
@@ -215,7 +216,7 @@ export default function TaskDetailScreen() {
           <View style={[styles.banner, styles.bannerInfo]}>
             <Ionicons name="hand-left-outline" size={20} color={colors.info} />
             <AppText variant="small" color={colors.info} style={styles.flex}>
-              {task.createdBy} gave you this task. Accept it to start, or decline with a reason.
+              {t('task.newBanner', { name: task.createdBy })}
             </AppText>
           </View>
         ) : null}
@@ -232,7 +233,7 @@ export default function TaskDetailScreen() {
             </View>
             <View style={styles.flex}>
               <AppText variant="label" color="#5A3600">
-                {reviewer?.name ?? task.reviewerName} · {reviewer?.role ?? 'Reviewer'}
+                {reviewer?.name ?? task.reviewerName} · {reviewer?.role ?? t('common.reviewer')}
               </AppText>
               <AppText variant="small" color="#5A3600">
                 {task.reviewerNote}
@@ -251,7 +252,7 @@ export default function TaskDetailScreen() {
             editable={editable}
             busy={busy === 'attach'}
             onAdd={() => setSheet('attach')}
-            onRemove={(fileId) => run('remove', () => removeAttachment(taskId, fileId), 'File removed')}
+            onRemove={(fileId) => run('remove', () => removeAttachment(taskId, fileId), t('task.toast.fileRemoved'))}
           />
         ) : null}
         {tab === 'activity' ? <ActivityTab task={task} sending={busy === 'comment'} onSend={sendComment} /> : null}
@@ -260,7 +261,7 @@ export default function TaskDetailScreen() {
       <ActionBar
         task={task}
         busy={busy}
-        onAccept={() => run('accept', () => acceptTask(taskId), 'Task accepted. You can start now.')}
+        onAccept={() => run('accept', () => acceptTask(taskId), t('task.toast.accepted'))}
         onDecline={() => setSheet('decline')}
         onSubmit={() => setSheet('submit')}
         onWithdraw={() => setSheet('withdraw')}
@@ -280,14 +281,14 @@ export default function TaskDetailScreen() {
         loading={busy === 'submit'}
         task={task}
         onConfirm={(note) =>
-          run('submit', () => submitTask(taskId, note), task.status === 'corrections' ? 'Resubmitted for review' : 'Submitted for review')
+          run('submit', () => submitTask(taskId, note), task.status === 'corrections' ? t('task.toast.resubmitted') : t('task.toast.submitted'))
         }
       />
       <WithdrawSheet
         visible={sheet === 'withdraw'}
         onClose={() => setSheet(null)}
         loading={busy === 'withdraw'}
-        onConfirm={() => run('withdraw', () => withdrawTask(taskId), 'Submission withdrawn')}
+        onConfirm={() => run('withdraw', () => withdrawTask(taskId), t('task.toast.withdrawn'))}
       />
       <AttachSheet visible={sheet === 'attach'} onClose={() => setSheet(null)} onPick={pick} />
     </SafeAreaView>
@@ -300,10 +301,10 @@ function BackButton() {
       onPress={() => (router.canGoBack() ? router.back() : router.replace('/home'))}
       style={styles.back}
       accessibilityRole="button"
-      accessibilityLabel="Go back"
+      accessibilityLabel={t('common.back')}
       hitSlop={8}
     >
-      <Ionicons name="chevron-back" size={22} color={colors.text} />
+      <Ionicons name={chevron('back')} size={22} color={colors.text} />
     </Pressable>
   );
 }

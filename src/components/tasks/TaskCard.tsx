@@ -7,6 +7,7 @@ import { StatusBadge } from './StatusBadge';
 import type { Task } from '../../types/task';
 import { colors, motion, radius, space } from '../../theme';
 import { dueLabel, isOverdue } from '../../utils/date';
+import { t } from '../../i18n';
 
 type Props = {
   task: Task;
@@ -38,7 +39,7 @@ export function TaskCard({ task, index = 0, onPress, variant = 'default' }: Prop
 
   const badge = task.isNew ? 'new' : overdue ? 'overdue' : task.status;
   const badgeLabel =
-    task.status === 'pendingReview' && !task.isNew ? `Level ${task.currentLevel} of ${task.approvalLevels}` : undefined;
+    task.status === 'pendingReview' && !task.isNew ? t('task.levelOf', { level: task.currentLevel, total: task.approvalLevels }) : undefined;
 
   const isFixCard = variant === 'attention' && task.status === 'corrections';
 
@@ -61,7 +62,7 @@ export function TaskCard({ task, index = 0, onPress, variant = 'default' }: Prop
               <StatusBadge status="corrections" />
               {task.reviewerName ? (
                 <AppText variant="caption" color={colors.muted}>
-                  from {task.reviewerName}
+                  {t('task.fromReviewer', { name: task.reviewerName })}
                 </AppText>
               ) : null}
             </View>
@@ -97,7 +98,7 @@ export function TaskCard({ task, index = 0, onPress, variant = 'default' }: Prop
                 </AppText>
                 <Dot />
                 <AppText variant="caption" color={colors.muted}>
-                  {task.checklistDone}/{task.checklistTotal} items
+                  {t('task.itemsCount', { done: task.checklistDone, total: task.checklistTotal })}
                 </AppText>
               </View>
             </View>

@@ -9,6 +9,7 @@ import type { Attachment, FileKind, TaskDetail } from '../../types/task';
 import { colors, radius, space } from '../../theme';
 import { formatSize } from '../../utils/files';
 import { timeAgo } from '../../utils/time';
+import { chevron, t } from '../../i18n';
 
 const KIND: Record<FileKind, { label: string; fg: string; bg: string }> = {
   image: { label: 'IMG', fg: colors.info, bg: colors.infoBg },
@@ -34,14 +35,14 @@ export function FilesTab({ task, editable, busy, onAdd, onRemove }: Props) {
       setPreview(file);
     } else {
       // Later: GET /api/attachments/{id} downloads the file after a permission check.
-      Alert.alert(file.name, 'This file will open once the app is connected to the server.');
+      Alert.alert(file.name, t('files.notConnected'));
     }
   }
 
   function confirmRemove(file: Attachment) {
-    Alert.alert('Remove file?', `${file.name} will be removed from this task.`, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Remove', style: 'destructive', onPress: () => onRemove(file.id) },
+    Alert.alert(t('files.removeTitle'), t('files.removeMsg', { name: file.name }), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('files.remove'), style: 'destructive', onPress: () => onRemove(file.id) },
     ]);
   }
 
@@ -49,7 +50,7 @@ export function FilesTab({ task, editable, busy, onAdd, onRemove }: Props) {
     <View style={styles.wrap}>
       {editable ? (
         <AppButton
-          title={busy ? 'Uploading…' : 'Add file'}
+          title={busy ? t('files.uploading') : t('files.add')}
           variant="secondary"
           loading={busy}
           onPress={onAdd}
@@ -60,8 +61,8 @@ export function FilesTab({ task, editable, busy, onAdd, onRemove }: Props) {
       {task.attachments.length === 0 ? (
         <EmptyState
           icon="document-attach-outline"
-          title="No files yet"
-          message={editable ? 'Add photos or documents as proof of your work.' : 'No files were added to this task.'}
+          title={t('files.emptyTitle')}
+          message={editable ? t('files.emptyEditable') : t('files.emptyReadonly')}
         />
       ) : (
         task.attachments.map((file) => {
@@ -71,7 +72,7 @@ export function FilesTab({ task, editable, busy, onAdd, onRemove }: Props) {
               key={file.id}
               onPress={() => open(file)}
               accessibilityRole="button"
-              accessibilityLabel={`Open ${file.name}`}
+              accessibilityLabel={t('files.open', { name: file.name })}
               style={({ pressed }) => [styles.file, pressed ? styles.pressed : null]}
             >
               {file.kind === 'image' && file.uri ? (
@@ -88,15 +89,15 @@ export function FilesTab({ task, editable, busy, onAdd, onRemove }: Props) {
                   {file.name}
                 </AppText>
                 <AppText variant="caption" color={colors.muted}>
-                  {formatSize(file.sizeKb)} · {file.mine ? 'You' : file.uploadedBy} · {timeAgo(file.at)}
+                  {formatSize(file.sizeKb)} · {file.mine ? t('common.you') : file.uploadedBy} · {timeAgo(file.at)}
                 </AppText>
               </View>
               {file.mine && editable ? (
-                <Pressable onPress={() => confirmRemove(file)} hitSlop={10} accessibilityRole="button" accessibilityLabel={`Remove ${file.name}`}>
+                <Pressable onPress={() => confirmRemove(file)} hitSlop={10} accessibilityRole="button" accessibilityLabel={t('files.removeA11y', { name: file.name })}>
                   <Ionicons name="trash-outline" size={20} color={colors.danger} />
                 </Pressable>
               ) : (
-                <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+                <Ionicons name={chevron('forward')} size={18} color={colors.muted} />
               )}
             </Pressable>
           );
@@ -109,7 +110,7 @@ export function FilesTab({ task, editable, busy, onAdd, onRemove }: Props) {
             <AppText variant="label" color={colors.onDark} numberOfLines={1} style={styles.info}>
               {preview?.name}
             </AppText>
-            <Pressable onPress={() => setPreview(null)} hitSlop={12} accessibilityRole="button" accessibilityLabel="Close preview">
+            <Pressable onPress={() => setPreview(null)} hitSlop={12} accessibilityRole="button" accessibilityLabel={t('files.closePreview')}>
               <Ionicons name="close" size={26} color={colors.onDark} />
             </Pressable>
           </View>

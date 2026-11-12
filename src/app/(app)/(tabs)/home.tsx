@@ -15,12 +15,13 @@ import { getDashboard } from '../../../services/tasks';
 import type { Dashboard, Task } from '../../../types/task';
 import { colors, radius, space } from '../../../theme';
 import { friendlyToday } from '../../../utils/date';
+import { t, tn } from '../../../i18n';
 
 function greeting() {
   const h = new Date().getHours();
-  if (h < 12) return 'Good morning';
-  if (h < 17) return 'Good afternoon';
-  return 'Good evening';
+  if (h < 12) return t('home.morning');
+  if (h < 17) return t('home.afternoon');
+  return t('home.evening');
 }
 
 function openTask(task: Task) {
@@ -43,7 +44,7 @@ export default function HomeTab() {
     try {
       setData(await getDashboard());
     } catch {
-      setError('Could not load your tasks. Check your internet.');
+      setError(t('common.loadTasksError'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -70,9 +71,10 @@ export default function HomeTab() {
     .slice(0, 2);
 
   const summary = data
-    ? `You have ${data.dueToday} ${data.dueToday === 1 ? 'task' : 'tasks'} due today${
-        data.toFix ? ` and ${data.toFix} waiting for your fix` : ''
-      }.`
+    ? t('home.summary', {
+        tasks: tn('count.tasks', data.dueToday),
+        fix: data.toFix ? t('home.summaryFix', { n: data.toFix }) : '',
+      })
     : ' ';
 
   return (
@@ -108,7 +110,7 @@ export default function HomeTab() {
               onPress={() => router.push('/alerts')}
               style={styles.bell}
               accessibilityRole="button"
-              accessibilityLabel={unread > 0 ? `Notifications, ${unread} unread` : 'Notifications'}
+              accessibilityLabel={unread > 0 ? t('home.notifUnread', { n: unread }) : t('common.notifications')}
             >
               <Ionicons name="notifications-outline" size={20} color={colors.onDark} />
               {unread > 0 ? <View style={styles.bellDot} /> : null}
@@ -133,13 +135,13 @@ export default function HomeTab() {
               <View style={styles.stat}>
                 <AppText variant="h1">{data.dueToday}</AppText>
                 <AppText variant="caption" color={colors.muted}>
-                  Due today
+                  {t('home.dueToday')}
                 </AppText>
               </View>
               <View style={styles.stat}>
                 <AppText variant="h1">{data.inProgress}</AppText>
                 <AppText variant="caption" color={colors.muted}>
-                  In progress
+                  {t('status.inProgress')}
                 </AppText>
               </View>
               <View style={[styles.stat, styles.statWarn]}>
@@ -147,7 +149,7 @@ export default function HomeTab() {
                   {data.toFix}
                 </AppText>
                 <AppText variant="caption" color={colors.warning}>
-                  To fix
+                  {t('home.toFix')}
                 </AppText>
               </View>
             </>
@@ -160,7 +162,7 @@ export default function HomeTab() {
               <AppText variant="small" color={colors.danger}>
                 {error}
               </AppText>
-              <AppButton title="Try again" variant="secondary" onPress={() => load()} />
+              <AppButton title={t('common.tryAgain')} variant="secondary" onPress={() => load()} />
             </View>
           ) : null}
 
@@ -176,7 +178,7 @@ export default function HomeTab() {
               {data.attention.length > 0 ? (
                 <View style={styles.section}>
                   <AppText variant="overline" color={colors.muted}>
-                    Needs your attention
+                    {t('home.attention')}
                   </AppText>
                   {data.attention.map((t, i) => (
                     <TaskCard key={t.id} task={t} index={i} variant="attention" onPress={() => openTask(t)} />
@@ -187,11 +189,11 @@ export default function HomeTab() {
               <View style={styles.section}>
                 <View style={styles.sectionHead}>
                   <AppText variant="overline" color={colors.muted}>
-                    Due today
+                    {t('home.dueToday')}
                   </AppText>
                   <Pressable onPress={() => router.push('/my-tasks')} hitSlop={8} accessibilityRole="link">
                     <AppText variant="label" color={colors.pine600}>
-                      See all
+                      {t('common.seeAll')}
                     </AppText>
                   </Pressable>
                 </View>
@@ -202,8 +204,8 @@ export default function HomeTab() {
                 ) : (
                   <EmptyState
                     icon="sunny-outline"
-                    title="Nothing else due today"
-                    message="Check My Tasks for what's coming next."
+                    title={t('home.nothingTitle')}
+                    message={t('home.nothingMsg')}
                   />
                 )}
               </View>

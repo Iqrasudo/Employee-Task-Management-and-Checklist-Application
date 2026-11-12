@@ -9,21 +9,15 @@ import { SettingGroup, SettingRow } from '../../../components/ui/SettingRow';
 import { Skeleton } from '../../../components/ui/Skeleton';
 import { Toast } from '../../../components/ui/Toast';
 import { useAuth } from '../../../context/AuthContext';
+import { useLanguage } from '../../../i18n/LanguageProvider';
 import { getPreferences, getProfile, Language, Preferences, Profile, updatePreferences } from '../../../services/profile';
 import { colors, radius, space } from '../../../theme';
 import { formatDate } from '../../../utils/date';
-
-const ROLE_LABEL: Record<string, string> = {
-  Employee: 'Employee',
-  Supervisor: 'Supervisor',
-  AssistantManager: 'Assistant Manager',
-  Manager: 'Manager',
-  HR: 'HR',
-  Admin: 'Admin',
-};
+import { t, TKey } from '../../../i18n';
 
 export default function ProfileTab() {
   const { user, signOut } = useAuth();
+  const { lang: appLang, changeLanguage } = useLanguage();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [prefs, setPrefs] = useState<Preferences | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -41,26 +35,24 @@ export default function ProfileTab() {
     setPrefs({ ...prefs, [key]: value });
     try {
       await updatePreferences({ [key]: value } as Partial<Preferences>);
-      setToast('Saved');
+      setToast(t('common.saved'));
     } catch {
       setPrefs(before);
-      Alert.alert('Not saved', 'Check your internet and try again.');
+      Alert.alert(t('profile.notSaved'), t('common.checkInternet'));
     }
   }
 
-  function chooseLanguage(lang: Language) {
-    if (!prefs || lang === prefs.language) return;
-    setPref('language', lang);
-    if (lang === 'ar') {
-      Alert.alert('عربي', 'Your choice is saved. Arabic screens (right-to-left) are added in the translation step, so the app stays in English for now.');
-    }
+  function chooseLanguage(next: Language) {
+    if (next === appLang) return;
+    updatePreferences({ language: next }).catch(() => {}); // later: saved on the server too
+    changeLanguage(next); // redraws the app in the new language (and flips it right-to-left for Arabic)
   }
 
   function confirmLogout() {
-    Alert.alert('Log out?', 'You will need your email and password to sign in again.', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('profile.logoutTitle'), t('profile.logoutMsg'), [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: 'Log out',
+        text: t('profile.logout'),
         style: 'destructive',
         onPress: () => {
           signOut(); // later: POST /api/auth/logout + forget this phone's push token
@@ -100,17 +92,17 @@ export default function ProfileTab() {
             </View>
             <View style={styles.roleBadge}>
               <AppText variant="caption" color={colors.pine900}>
-                {ROLE_LABEL[user?.role ?? 'Employee']}
+                {t(`role.${user?.role ?? 'Employee'}` as TKey)}
               </AppText>
             </View>
           </View>
 
           {profile ? (
             <View style={styles.facts}>
-              <Fact label="Department" value={user?.department ?? ''} />
-              <Fact label="Reports to" value={profile.manager} />
-              <Fact label="Branch" value={profile.branch} />
-              <Fact label="Employee ID" value={profile.employeeCode} />
+              <Fact label={t('common.department')} value={user?.department ?? ''} />
+              <Fact label={t('profile.reportsTo')} value={profile.manager} />
+              <Fact label={t('profile.branch')} value={profile.branch} />
+              <Fact label={t('profile.employeeId')} value={profile.employeeCode} />
             </View>
           ) : (
             <View style={styles.facts}>
@@ -121,22 +113,22 @@ export default function ProfileTab() {
         </View>
 
         {/* Contact */}
-        <SettingGroup title="Contact">
-          <SettingRow icon="mail-outline" title="Email" subtitle={user?.email} />
-          <SettingRow icon="call-outline" title="Phone" subtitle={profile?.phone ?? '…'} />
+        <SettingGroup title={t('profile.contact')}>
+          <SettingRow icon="mail-outline" title={t('profile.email')} subtitle={user?.email} />
+          <SettingRow icon="call-outline" title={t('profile.phone')} subtitle={profile?.phone ?? '…'} />
           <SettingRow
             icon="calendar-outline"
-            title="Joined"
+            title={t('profile.joined')}
             subtitle={profile ? formatDate(new Date(profile.joined)) + ` ${new Date(profile.joined).getFullYear()}` : '…'}
             last
           />
         </SettingGroup>
         <AppText variant="caption" color={colors.muted} style={styles.note}>
-          To change these details, contact HR.
+          {t('profile.contactHr')}
         </AppText>
 
         {/* Language */}
-        <SettingGroup title="Language">
+        <SettingGroup title={t('profile.language')}>
           <View style={styles.langRow}>
             {prefs ? (
               <SegmentedTabs<Language>
@@ -144,7 +136,7 @@ export default function ProfileTab() {
                   { key: 'en', label: 'English' },
                   { key: 'ar', label: 'عربي' },
                 ]}
-                value={prefs.language}
+                value={appLang}
                 onChange={chooseLanguage}
               />
             ) : (
@@ -154,69 +146,69 @@ export default function ProfileTab() {
         </SettingGroup>
 
         {/* Notifications */}
-        <SettingGroup title="Notifications">
+        <SettingGroup title={t('common.notifications')}>
           <SettingRow
             icon="notifications-outline"
-            title="Phone notifications"
-            subtitle="New tasks, approvals and reminders on this phone"
+            title={t('profile.push')}
+            subtitle={t('profile.pushSub')}
             toggle={prefs ? { value: prefs.push, onChange: (v) => setPref('push', v) } : undefined}
           />
           <SettingRow
             icon="mail-unread-outline"
-            title="Email me about new tasks"
+            title={t('profile.emailNew')}
             toggle={prefs ? { value: prefs.emailNewTask, onChange: (v) => setPref('emailNewTask', v) } : undefined}
           />
           <SettingRow
             icon="create-outline"
-            title="Email me when corrections are asked"
+            title={t('profile.emailFix')}
             toggle={prefs ? { value: prefs.emailCorrections, onChange: (v) => setPref('emailCorrections', v) } : undefined}
           />
           <SettingRow
             icon="checkmark-done-outline"
-            title="Email me when a task is approved"
+            title={t('profile.emailApproved')}
             toggle={prefs ? { value: prefs.emailApprovals, onChange: (v) => setPref('emailApprovals', v) } : undefined}
           />
           <SettingRow
             icon="alarm-outline"
-            title="Email deadline reminders"
+            title={t('profile.emailReminders')}
             toggle={prefs ? { value: prefs.emailReminders, onChange: (v) => setPref('emailReminders', v) } : undefined}
           />
           <SettingRow
             icon="today-outline"
-            title="Daily summary at 9:00 AM"
-            subtitle="One email with everything due that day"
+            title={t('profile.daily')}
+            subtitle={t('profile.dailySub')}
             toggle={prefs ? { value: prefs.dailySummary, onChange: (v) => setPref('dailySummary', v) } : undefined}
             last
           />
         </SettingGroup>
         {pushOff ? (
           <AppText variant="caption" color={colors.warning} style={styles.note}>
-            Phone notifications are off. You will only see alerts inside the app.
+            {t('profile.pushOff')}
           </AppText>
         ) : null}
 
         {/* Account */}
-        <SettingGroup title="Account">
-          <SettingRow icon="key-outline" title="Change password" onPress={() => router.push('/change-password')} />
+        <SettingGroup title={t('profile.account')}>
+          <SettingRow icon="key-outline" title={t('cpw.title')} onPress={() => router.push('/change-password')} />
           <SettingRow
             icon="people-outline"
-            title="Delegation"
-            subtitle={profile?.delegate ? `${profile.delegate.name} covers you until ${formatDate(new Date(profile.delegate.until))}` : 'Nobody is covering for you'}
+            title={t('profile.delegation')}
+            subtitle={profile?.delegate ? t('profile.delegateUntil', { name: profile.delegate.name, date: formatDate(new Date(profile.delegate.until)) }) : t('profile.noDelegate')}
           />
           <SettingRow
             icon="help-circle-outline"
-            title="Help"
-            onPress={() => Alert.alert('Help', 'For problems with a task, ask your supervisor. For account problems, contact HR.')}
+            title={t('profile.help')}
+            onPress={() => Alert.alert(t('profile.help'), t('profile.helpMsg'))}
             last
           />
         </SettingGroup>
 
-        <SettingGroup title="Session">
-          <SettingRow icon="log-out-outline" title="Log out" danger onPress={confirmLogout} last />
+        <SettingGroup title={t('profile.session')}>
+          <SettingRow icon="log-out-outline" title={t('profile.logout')} danger onPress={confirmLogout} last />
         </SettingGroup>
 
         <AppText variant="caption" color={colors.muted} align="center">
-          Amal · version {Constants.expoConfig?.version ?? '1.0.0'}
+          {t('profile.version', { v: Constants.expoConfig?.version ?? '1.0.0' })}
         </AppText>
       </ScrollView>
     </SafeAreaView>

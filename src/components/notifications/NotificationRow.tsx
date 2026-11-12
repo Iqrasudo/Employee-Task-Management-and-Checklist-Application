@@ -5,6 +5,7 @@ import { AppText } from '../ui/AppText';
 import type { AppNotification, NotificationType } from '../../types/notification';
 import { colors, motion, radius, space } from '../../theme';
 import { timeAgo } from '../../utils/time';
+import { t } from '../../i18n';
 
 // Icon and colours for each kind of notification.
 const LOOK: Record<NotificationType, { icon: keyof typeof Ionicons.glyphMap; fg: string; bg: string }> = {
@@ -40,7 +41,7 @@ export function NotificationRow({ item, index, onPress }: Props) {
       <Pressable
         onPress={onPress}
         accessibilityRole="button"
-        accessibilityLabel={`${item.read ? '' : 'Unread. '}${item.title}. ${item.body}`}
+        accessibilityLabel={`${item.read ? '' : t('alerts.unreadA11y')}${item.title}. ${item.body}`}
         style={({ pressed }) => [styles.row, !item.read ? styles.unread : null, pressed ? styles.pressed : null]}
       >
         <View style={[styles.icon, { backgroundColor: look.bg }]}>

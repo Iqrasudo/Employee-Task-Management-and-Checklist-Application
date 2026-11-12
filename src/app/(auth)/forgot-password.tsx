@@ -10,6 +10,7 @@ import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { requestPasswordReset } from '../../services/auth';
 import { colors, space } from '../../theme';
 import { EMAIL_RE } from '../../utils/password';
+import { t } from '../../i18n';
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState('');
@@ -18,15 +19,15 @@ export default function ForgotPasswordScreen() {
   const [sent, setSent] = useState(false);
 
   async function handleSend() {
-    if (!email.trim()) return setError('Enter your work email.');
-    if (!EMAIL_RE.test(email.trim())) return setError('This email does not look right.');
+    if (!email.trim()) return setError(t('auth.emailRequired'));
+    if (!EMAIL_RE.test(email.trim())) return setError(t('auth.emailInvalid'));
 
     setLoading(true);
     try {
       await requestPasswordReset(email.trim());
       setSent(true);
     } catch {
-      setError('Could not connect. Check your internet and try again.');
+      setError(t('common.noConnection'));
     } finally {
       setLoading(false);
     }
@@ -38,12 +39,12 @@ export default function ForgotPasswordScreen() {
         <View style={styles.doneWrap}>
           <EmptyState
             icon="mail-unread-outline"
-            title="Check your email"
-            message={`If ${email.trim()} has an account, we sent a link to reset the password. The link works for 30 minutes.`}
+            title={t('forgot.sentTitle')}
+            message={t('forgot.sentMessage', { email: email.trim() })}
             action={
               <View style={styles.actions}>
-                <AppButton title="Back to sign in" onPress={() => router.replace('/login')} />
-                <AppButton title="Send again" variant="ghost" onPress={() => setSent(false)} />
+                <AppButton title={t('forgot.back')} onPress={() => router.replace('/login')} />
+                <AppButton title={t('forgot.again')} variant="ghost" onPress={() => setSent(false)} />
               </View>
             }
           />
@@ -56,18 +57,18 @@ export default function ForgotPasswordScreen() {
     <SafeAreaView style={styles.root}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <ScreenHeader title="Forgot password" subtitle="Reset" showBack />
+          <ScreenHeader title={t('forgot.title')} subtitle={t('forgot.subtitle')} showBack />
           <AppText variant="small" color={colors.muted}>
-            Enter your work email. We will send you a link to set a new password.
+            {t('forgot.intro')}
           </AppText>
 
           <AppTextInput
-            label="Work email"
+            label={t('auth.workEmail')}
             placeholder="name@company.com"
             leftIcon="mail-outline"
             value={email}
-            onChangeText={(t) => {
-              setEmail(t);
+            onChangeText={(v) => {
+              setEmail(v);
               if (error) setError(undefined);
             }}
             error={error}
@@ -80,7 +81,7 @@ export default function ForgotPasswordScreen() {
             editable={!loading}
           />
 
-          <AppButton title="Send reset link" onPress={handleSend} loading={loading} />
+          <AppButton title={t('forgot.send')} onPress={handleSend} loading={loading} />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

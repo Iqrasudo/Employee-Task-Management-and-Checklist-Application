@@ -7,6 +7,7 @@ import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-goog
 import { BricolageGrotesque_500Medium, BricolageGrotesque_700Bold } from '@expo-google-fonts/bricolage-grotesque';
 import { IBMPlexSansArabic_400Regular, IBMPlexSansArabic_600SemiBold } from '@expo-google-fonts/ibm-plex-sans-arabic';
 import { AuthProvider } from '../context/AuthContext';
+import { LanguageProvider } from '../i18n/LanguageProvider';
 import { colors } from '../theme';
 
 SplashScreen.preventAutoHideAsync();
@@ -29,6 +30,7 @@ export default function RootLayout() {
   if (!loaded && !error) return null;
 
   return (
+    <LanguageProvider>
     <AuthProvider>
       <StatusBar style="dark" />
       <Stack
@@ -39,5 +41,6 @@ export default function RootLayout() {
         }}
       />
     </AuthProvider>
+    </LanguageProvider>
   );
 }

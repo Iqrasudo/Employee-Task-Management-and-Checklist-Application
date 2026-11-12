@@ -13,14 +13,15 @@ import { getMyTasks } from '../../../services/tasks';
 import type { Task } from '../../../types/task';
 import { colors, radius, space } from '../../../theme';
 import { dateKey, longDate, monthTitle } from '../../../utils/calendar';
+import { chevron, t, TKey, tn } from '../../../i18n';
 
 const LEGEND = [
-  { label: 'New', color: colors.saffron },
-  { label: 'In progress', color: colors.info },
-  { label: 'To fix', color: colors.warning },
-  { label: 'In review', color: colors.review },
-  { label: 'Approved', color: colors.pine600 },
-  { label: 'Overdue', color: colors.danger },
+  { label: 'status.new' as TKey, color: colors.saffron },
+  { label: 'status.inProgress' as TKey, color: colors.info },
+  { label: 'home.toFix' as TKey, color: colors.warning },
+  { label: 'cal.inReview' as TKey, color: colors.review },
+  { label: 'status.approved' as TKey, color: colors.pine600 },
+  { label: 'status.overdue' as TKey, color: colors.danger },
 ];
 
 export default function CalendarTab() {
@@ -42,7 +43,7 @@ export default function CalendarTab() {
     try {
       setTasks(await getMyTasks()); // later: GET /api/me/tasks/calendar?from=&to=
     } catch {
-      setError('Could not load your tasks. Check your internet.');
+      setError(t('common.loadTasksError'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -115,19 +116,19 @@ export default function CalendarTab() {
         <View style={styles.head}>
           <View style={styles.flex}>
             <AppText variant="overline" color={colors.muted}>
-              Deadlines
+              {t('cal.deadlines')}
             </AppText>
             <AppText variant="h1">{monthTitle(year, month)}</AppText>
             <AppText variant="caption" color={colors.muted}>
-              {loading ? ' ' : `${monthCount} ${monthCount === 1 ? 'task' : 'tasks'} due this month`}
+              {loading ? ' ' : t('cal.monthCount', { tasks: tn('count.tasks', monthCount) })}
             </AppText>
           </View>
           <View style={styles.nav}>
-            <Pressable onPress={() => changeMonth(-1)} style={styles.navBtn} accessibilityRole="button" accessibilityLabel="Previous month">
-              <Ionicons name="chevron-back" size={20} color={colors.text} />
+            <Pressable onPress={() => changeMonth(-1)} style={styles.navBtn} accessibilityRole="button" accessibilityLabel={t('cal.prev')}>
+              <Ionicons name={chevron('back')} size={20} color={colors.text} />
             </Pressable>
-            <Pressable onPress={() => changeMonth(1)} style={styles.navBtn} accessibilityRole="button" accessibilityLabel="Next month">
-              <Ionicons name="chevron-forward" size={20} color={colors.text} />
+            <Pressable onPress={() => changeMonth(1)} style={styles.navBtn} accessibilityRole="button" accessibilityLabel={t('cal.next')}>
+              <Ionicons name={chevron('forward')} size={20} color={colors.text} />
             </Pressable>
           </View>
         </View>
@@ -136,7 +137,7 @@ export default function CalendarTab() {
           <Pressable onPress={goToday} style={styles.todayBtn} accessibilityRole="button">
             <Ionicons name="today-outline" size={16} color={colors.pine600} />
             <AppText variant="label" color={colors.pine600}>
-              Today
+              {t('cal.today')}
             </AppText>
           </Pressable>
         ) : null}
@@ -154,12 +155,12 @@ export default function CalendarTab() {
           />
         )}
 
-        <View style={styles.legend} accessibilityLabel="Dot colours">
+        <View style={styles.legend} accessibilityLabel={t('cal.legendA11y')}>
           {LEGEND.map((l) => (
             <View key={l.label} style={styles.legendItem}>
               <View style={[styles.legendDot, { backgroundColor: l.color }]} />
               <AppText variant="caption" color={colors.muted}>
-                {l.label}
+                {t(l.label)}
               </AppText>
             </View>
           ))}
@@ -168,16 +169,16 @@ export default function CalendarTab() {
         <View style={styles.dayHead}>
           <AppText variant="h3">{longDate(selected)}</AppText>
           <AppText variant="caption" color={colors.muted}>
-            {loading ? '' : `${dayTasks.length} ${dayTasks.length === 1 ? 'task' : 'tasks'}`}
+            {loading ? '' : tn('count.tasks', dayTasks.length)}
           </AppText>
         </View>
 
         {error ? (
           <EmptyState
             icon="cloud-offline-outline"
-            title="Something went wrong"
+            title={t('common.errorTitle')}
             message={error}
-            action={<AppButton title="Try again" onPress={() => load()} style={styles.fullWidth} />}
+            action={<AppButton title={t('common.tryAgain')} onPress={() => load()} style={styles.fullWidth} />}
           />
         ) : loading ? (
           <>
@@ -194,7 +195,7 @@ export default function CalendarTab() {
             />
           ))
         ) : (
-          <EmptyState icon="sunny-outline" title="Nothing due on this day" message="Tap a day with dots to see its tasks." />
+          <EmptyState icon="sunny-outline" title={t('cal.emptyTitle')} message={t('cal.emptyMsg')} />
         )}
       </ScrollView>
     </SafeAreaView>

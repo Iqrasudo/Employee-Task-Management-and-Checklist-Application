@@ -1,4 +1,5 @@
 import { TextStyle } from 'react-native';
+import { isArabic } from '../i18n';
 
 // Font names must match the keys loaded in src/app/_layout.tsx
 export const fonts = {
@@ -31,3 +32,10 @@ export const text = {
 } satisfies Record<string, TextStyle>;
 
 export type TextVariant = keyof typeof text;
+
+// Inter / Bricolage have no Arabic letters, so in Arabic every text uses IBM Plex Sans Arabic.
+const BOLD = new Set<string>([fonts.heading, fonts.headingMedium, fonts.semibold]);
+export function localFont(family: string): string {
+  if (!isArabic()) return family;
+  return BOLD.has(family) ? fonts.arabicBold : fonts.arabic;
+}

@@ -13,15 +13,16 @@ import { getNotifications, markAllRead, markRead } from '../../../services/notif
 import type { AppNotification } from '../../../types/notification';
 import { colors, radius, space } from '../../../theme';
 import { dayDiff } from '../../../utils/date';
+import { t } from '../../../i18n';
 
 type Filter = 'all' | 'unread';
 
 // Splits the list into Today / Yesterday / Earlier.
 function groupByDay(items: AppNotification[]) {
   const groups: { title: string; data: AppNotification[] }[] = [
-    { title: 'Today', data: [] },
-    { title: 'Yesterday', data: [] },
-    { title: 'Earlier', data: [] },
+    { title: t('alerts.today'), data: [] },
+    { title: t('alerts.yesterday'), data: [] },
+    { title: t('alerts.earlier'), data: [] },
   ];
   for (const n of items) {
     const diff = dayDiff(n.at);
@@ -46,7 +47,7 @@ export default function AlertsTab() {
     try {
       setItems(await getNotifications());
     } catch {
-      setError('Could not load notifications. Check your internet.');
+      setError(t('alerts.loadError'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -86,13 +87,13 @@ export default function AlertsTab() {
     <SafeAreaView edges={['top']} style={styles.root}>
       <View style={styles.top}>
         <ScreenHeader
-          title="Alerts"
-          subtitle={unread > 0 ? `${unread} unread` : 'All caught up'}
+          title={t('tabs.alerts')}
+          subtitle={unread > 0 ? t('alerts.unread', { n: unread }) : t('alerts.caughtUp')}
           right={
             unread > 0 ? (
               <Pressable onPress={readAll} disabled={markingAll} hitSlop={8} accessibilityRole="button" style={styles.readAll}>
                 <AppText variant="label" color={colors.pine600}>
-                  Mark all as read
+                  {t('alerts.markAll')}
                 </AppText>
               </Pressable>
             ) : null
@@ -111,7 +112,7 @@ export default function AlertsTab() {
                 style={[styles.chip, selected ? styles.chipOn : null]}
               >
                 <AppText variant="label" color={selected ? colors.onDark : colors.text} style={styles.chipText}>
-                  {f === 'all' ? `All · ${items.length}` : `Unread · ${unread}`}
+                  {f === 'all' ? `${t('filter.all')} · ${items.length}` : `${t('alerts.unreadFilter')} · ${unread}`}
                 </AppText>
               </Pressable>
             );
@@ -135,9 +136,9 @@ export default function AlertsTab() {
         <View style={styles.list}>
           <EmptyState
             icon="cloud-offline-outline"
-            title="Something went wrong"
+            title={t('common.errorTitle')}
             message={error}
-            action={<AppButton title="Try again" onPress={() => load()} style={styles.fullWidth} />}
+            action={<AppButton title={t('common.tryAgain')} onPress={() => load()} style={styles.fullWidth} />}
           />
         </View>
       ) : (
@@ -159,8 +160,8 @@ export default function AlertsTab() {
           ListEmptyComponent={
             <EmptyState
               icon="notifications-off-outline"
-              title={filter === 'unread' ? 'No unread notifications' : 'No notifications yet'}
-              message={filter === 'unread' ? 'You have read everything.' : 'New tasks, approvals and reminders will show up here.'}
+              title={filter === 'unread' ? t('alerts.noUnread') : t('alerts.none')}
+              message={filter === 'unread' ? t('alerts.readAll') : t('alerts.noneMsg')}
             />
           }
         />

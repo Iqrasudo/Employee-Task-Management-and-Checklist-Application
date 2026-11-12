@@ -19,8 +19,10 @@ import { AppText } from '../../components/ui/AppText';
 import { AppTextInput } from '../../components/ui/AppTextInput';
 import { Logo } from '../../components/ui/Logo';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../i18n/LanguageProvider';
 import { AuthError, login } from '../../services/auth';
 import { colors, fonts, motion, radius, space } from '../../theme';
+import { t } from '../../i18n';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -28,6 +30,7 @@ type FieldErrors = { email?: string; password?: string };
 
 export default function LoginScreen() {
   const { signIn } = useAuth();
+  const { lang, changeLanguage } = useLanguage();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -49,9 +52,9 @@ export default function LoginScreen() {
 
   function validate(): boolean {
     const next: FieldErrors = {};
-    if (!email.trim()) next.email = 'Enter your work email.';
-    else if (!EMAIL_RE.test(email.trim())) next.email = 'This email does not look right.';
-    if (!password) next.password = 'Enter your password.';
+    if (!email.trim()) next.email = t('auth.emailRequired');
+    else if (!EMAIL_RE.test(email.trim())) next.email = t('auth.emailInvalid');
+    if (!password) next.password = t('auth.passwordRequired');
     setErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -67,7 +70,7 @@ export default function LoginScreen() {
       router.replace('/home');
     } catch (e) {
       setFormError(
-        e instanceof AuthError ? e.message : 'Could not connect. Check your internet and try again.',
+        e instanceof AuthError ? e.message : t('common.noConnection'),
       );
     } finally {
       setLoading(false);
@@ -93,19 +96,19 @@ export default function LoginScreen() {
             <Pressable
               style={styles.lang}
               accessibilityRole="button"
-              accessibilityLabel="Switch to Arabic"
-              onPress={() => Alert.alert('Arabic', 'Arabic language will be added in a later step.')}
+              accessibilityLabel={t('login.switchLang')}
+              onPress={() => changeLanguage(lang === 'ar' ? 'en' : 'ar')}
             >
-              <AppText variant="label" color={colors.onDark} style={{ fontFamily: fonts.arabicBold }}>
-                عربي
+              <AppText variant="label" color={colors.onDark} style={{ fontFamily: lang === 'ar' ? fonts.semibold : fonts.arabicBold }}>
+                {lang === 'ar' ? 'English' : 'عربي'}
               </AppText>
             </Pressable>
           </View>
           <AppText variant="display" color={colors.onDark}>
-            Amal
+            {t('app.name')}
           </AppText>
           <AppText variant="small" color={colors.onDarkMuted}>
-            Tasks, checklists and approvals in one place.
+            {t('login.tagline')}
           </AppText>
         </Animated.View>
       </SafeAreaView>
@@ -126,9 +129,9 @@ export default function LoginScreen() {
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.heading}>
-              <AppText variant="h1">Sign in</AppText>
+              <AppText variant="h1">{t('login.title')}</AppText>
               <AppText variant="small" color={colors.muted}>
-                Use the work email HR registered for you.
+                {t('login.subtitle')}
               </AppText>
             </View>
 
@@ -142,12 +145,12 @@ export default function LoginScreen() {
             ) : null}
 
             <AppTextInput
-              label="Work email"
+              label={t('auth.workEmail')}
               placeholder="name@company.com"
               leftIcon="mail-outline"
               value={email}
-              onChangeText={(t) => {
-                setEmail(t);
+              onChangeText={(v) => {
+                setEmail(v);
                 if (errors.email) setErrors((e) => ({ ...e, email: undefined }));
               }}
               error={errors.email}
@@ -163,13 +166,13 @@ export default function LoginScreen() {
 
             <AppTextInput
               ref={passwordRef}
-              label="Password"
-              placeholder="Your password"
+              label={t('auth.password')}
+              placeholder={t('login.passwordPlaceholder')}
               leftIcon="lock-closed-outline"
               password
               value={password}
-              onChangeText={(t) => {
-                setPassword(t);
+              onChangeText={(v) => {
+                setPassword(v);
                 if (errors.password) setErrors((e) => ({ ...e, password: undefined }));
               }}
               error={errors.password}
@@ -189,16 +192,16 @@ export default function LoginScreen() {
               accessibilityRole="link"
             >
               <AppText variant="label" color={colors.pine600}>
-                Forgot password?
+                {t('login.forgot')}
               </AppText>
             </Pressable>
 
-            <AppButton title="Sign in" onPress={handleLogin} loading={loading} />
+            <AppButton title={t('login.signInButton')} onPress={handleLogin} loading={loading} />
 
             <View style={styles.note}>
               <Ionicons name="information-circle-outline" size={18} color={colors.muted} />
               <AppText variant="caption" color={colors.muted} style={styles.flex}>
-                No account? Accounts are created by HR. Check your email for the activation link.
+                {t('login.noAccount')}
               </AppText>
             </View>
 
@@ -212,7 +215,7 @@ export default function LoginScreen() {
               accessibilityRole="link"
             >
               <AppText variant="caption" color={colors.pine600}>
-                Demo: open the activation link screen
+                {t('login.demoActivation')}
               </AppText>
             </Pressable>
           </ScrollView>

@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from './AppText';
 import { colors, radius, space } from '../../theme';
+import { chevron, t } from '../../i18n';
 
 type Props = {
   title: string;
@@ -21,10 +22,10 @@ export function ScreenHeader({ title, subtitle, showBack = false, right }: Props
             onPress={() => (router.canGoBack() ? router.back() : router.replace('/login'))}
             style={styles.back}
             accessibilityRole="button"
-            accessibilityLabel="Go back"
+            accessibilityLabel={t('common.back')}
             hitSlop={8}
           >
-            <Ionicons name="chevron-back" size={22} color={colors.text} />
+            <Ionicons name={chevron('back')} size={22} color={colors.text} />
           </Pressable>
         ) : null}
         <View style={styles.flex} />

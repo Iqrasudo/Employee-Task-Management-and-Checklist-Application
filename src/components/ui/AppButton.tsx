@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { ActivityIndicator, Animated, Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
-import { colors, radius, space, text } from '../../theme';
+import { colors, localFont, radius, space, text } from '../../theme';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'accent';
 
@@ -61,7 +61,7 @@ export function AppButton({
         ) : (
           <View style={styles.row}>
             {icon}
-            <Text style={[text.label, styles.title, { color: look.fg }]}>{title}</Text>
+            <Text style={[text.label, styles.title, { color: look.fg, fontFamily: localFont(text.label.fontFamily) }]}>{title}</Text>
           </View>
         )}
       </Pressable>

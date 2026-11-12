@@ -3,6 +3,7 @@ import { Animated, KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet,
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from './AppText';
 import { colors, motion, radius, space } from '../../theme';
+import { t } from '../../i18n';
 
 type Props = {
   visible: boolean;
@@ -35,7 +36,7 @@ export function BottomSheet({ visible, onClose, title, subtitle, children }: Pro
     <Modal transparent visible animationType="none" onRequestClose={onClose} statusBarTranslucent>
       <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, { opacity: anim }]}>
-          <Pressable style={styles.flex} onPress={onClose} accessibilityRole="button" accessibilityLabel="Close" />
+          <Pressable style={styles.flex} onPress={onClose} accessibilityRole="button" accessibilityLabel={t('common.close')} />
         </Animated.View>
 
         <Animated.View

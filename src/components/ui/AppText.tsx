@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text, TextProps } from 'react-native';
-import { colors, text, TextVariant } from '../../theme';
+import { colors, localFont, text, TextVariant } from '../../theme';
 
 type Props = TextProps & {
   variant?: TextVariant;
@@ -9,5 +9,5 @@ type Props = TextProps & {
 };
 
 export function AppText({ variant = 'body', color = colors.text, align, style, ...rest }: Props) {
-  return <Text {...rest} style={[text[variant], { color }, align ? { textAlign: align } : null, style]} />;
+  return <Text {...rest} style={[text[variant], { color, fontFamily: localFont(text[variant].fontFamily) }, align ? { textAlign: align } : null, style]} />;
 }

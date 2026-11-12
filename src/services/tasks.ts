@@ -5,6 +5,7 @@ import { mockExtras, TaskExtras } from '../data/mockTaskDetails';
 import type { ApprovalDecision, ApprovalStep, Dashboard, Task, TaskDetail } from '../types/task';
 import { isDueToday, isOverdue } from '../utils/date';
 import type { PickedFile } from '../utils/files';
+import { t as tr, TKey } from '../i18n';
 
 export class TaskError extends Error {}
 
@@ -19,15 +20,15 @@ const tasks: Task[] = mockTasks.map((t) => ({ ...t }));
 const extras = new Map<number, TaskExtras>(Object.entries(mockExtras).map(([k, v]) => [Number(k), copy(v)]));
 
 // Who approves at each level (later: from ApprovalChainLevels + the reporting tree).
-const LADDER = [
-  { role: 'Supervisor', name: 'Bilal Ahmed' },
-  { role: 'Asst. Manager', name: 'Nadia Rehman' },
-  { role: 'Manager', name: 'Hamza Malik' },
+const LADDER: { roleKey: TKey; name: string }[] = [
+  { roleKey: 'ladder.supervisor', name: 'Bilal Ahmed' },
+  { roleKey: 'ladder.asstManager', name: 'Nadia Rehman' },
+  { roleKey: 'ladder.manager', name: 'Hamza Malik' },
 ];
 
 function find(id: number): Task {
   const t = tasks.find((x) => x.id === id);
-  if (!t) throw new TaskError('This task is not available any more.');
+  if (!t) throw new TaskError(tr('task.err.notAvailable'));
   return t;
 }
 
@@ -58,7 +59,7 @@ function approvalsFor(t: Task): ApprovalStep[] {
     if (t.status === 'approved' || level < t.currentLevel) decision = 'approved';
     else if (level === t.currentLevel && t.status === 'pendingReview') decision = 'current';
     else if (level === t.currentLevel && t.status === 'corrections') decision = 'corrections';
-    return { level, ...person, decision };
+    return { level, role: tr(person.roleKey), name: person.name, decision };
   });
 }
 
@@ -122,10 +123,10 @@ export async function getDashboard(): Promise<Dashboard> {
 export async function acceptTask(id: number): Promise<void> {
   await wait(600);
   const t = find(id);
-  if (!t.isNew) throw new TaskError('This task was already accepted.');
+  if (!t.isNew) throw new TaskError(tr('task.err.alreadyAccepted'));
   t.isNew = false;
   t.status = 'inProgress';
-  log(id, 'You accepted the task');
+  log(id, tr('activity.accepted'));
 }
 
 // Later: POST /api/tasks/{id}/decline  { reason }
@@ -133,8 +134,8 @@ export async function acceptTask(id: number): Promise<void> {
 export async function declineTask(id: number, reason: string): Promise<string> {
   await wait(700);
   const t = find(id);
-  if (!t.isNew) throw new TaskError('Only new tasks can be declined.');
-  if (reason.trim().length < 10) throw new TaskError('Please give a reason of at least 10 characters.');
+  if (!t.isNew) throw new TaskError(tr('task.err.onlyNewDecline'));
+  if (reason.trim().length < 10) throw new TaskError(tr('task.err.reasonShort'));
   tasks.splice(tasks.indexOf(t), 1);
   return t.createdBy;
 }
@@ -143,9 +144,9 @@ export async function declineTask(id: number, reason: string): Promise<string> {
 export async function toggleChecklistItem(id: number, itemId: number): Promise<void> {
   await wait(200);
   const t = find(id);
-  if (!canEdit(t)) throw new TaskError('This checklist is locked right now.');
+  if (!canEdit(t)) throw new TaskError(tr('task.err.checklistLocked'));
   const item = extrasOf(id).checklist.find((i) => i.id === itemId);
-  if (!item) throw new TaskError('This checklist item no longer exists.');
+  if (!item) throw new TaskError(tr('task.err.itemGone'));
   item.done = !item.done;
   if (t.status === 'assigned') t.status = 'inProgress';
   syncCounts(t);
@@ -156,15 +157,15 @@ export async function addComment(id: number, body: string): Promise<void> {
   await wait(400);
   find(id);
   const text = body.trim();
-  if (!text) throw new TaskError('Write something first.');
-  extrasOf(id).comments.push({ id: nextId++, author: ME, role: 'You', body: text, at: now(), mine: true });
+  if (!text) throw new TaskError(tr('task.err.emptyComment'));
+  extrasOf(id).comments.push({ id: nextId++, author: ME, role: tr('common.you'), body: text, at: now(), mine: true });
 }
 
 // Later: POST /api/tasks/{id}/attachments  (multipart upload)
 export async function addAttachment(id: number, file: PickedFile): Promise<void> {
   await wait(900);
   const t = find(id);
-  if (!canEdit(t)) throw new TaskError('Files can only be added while you are working on the task.');
+  if (!canEdit(t)) throw new TaskError(tr('task.err.filesLocked'));
   extrasOf(id).attachments.push({
     id: nextId++,
     name: file.name,
@@ -176,7 +177,7 @@ export async function addAttachment(id: number, file: PickedFile): Promise<void>
     uri: file.uri,
   });
   syncCounts(t);
-  log(id, `You uploaded ${file.name}`);
+  log(id, tr('activity.uploaded', { name: file.name }));
 }
 
 // Later: DELETE /api/attachments/{attachmentId}
@@ -186,35 +187,35 @@ export async function removeAttachment(id: number, attachmentId: number): Promis
   const e = extrasOf(id);
   const file = e.attachments.find((a) => a.id === attachmentId);
   if (!file) return;
-  if (!file.mine || !canEdit(t)) throw new TaskError('You can only remove your own files before you submit.');
+  if (!file.mine || !canEdit(t)) throw new TaskError(tr('task.err.removeOwn'));
   e.attachments = e.attachments.filter((a) => a.id !== attachmentId);
   syncCounts(t);
-  log(id, `You removed ${file.name}`);
+  log(id, tr('activity.removed', { name: file.name }));
 }
 
 // Later: POST /api/tasks/{id}/submit  { note }
 export async function submitTask(id: number, note?: string): Promise<void> {
   await wait(900);
   const t = find(id);
-  if (!canEdit(t)) throw new TaskError('This task cannot be submitted right now.');
+  if (!canEdit(t)) throw new TaskError(tr('task.err.cannotSubmit'));
   const missing = extrasOf(id).checklist.filter((i) => i.required && !i.done);
-  if (missing.length) throw new TaskError(`Finish the required items first: ${missing.map((i) => i.text).join(', ')}.`);
+  if (missing.length) throw new TaskError(tr('task.err.requiredFirst', { items: missing.map((i) => i.text).join('، ') }));
 
   const resubmit = t.status === 'corrections';
-  if (note?.trim()) extrasOf(id).comments.push({ id: nextId++, author: ME, role: 'You', body: note.trim(), at: now(), mine: true });
+  if (note?.trim()) extrasOf(id).comments.push({ id: nextId++, author: ME, role: tr('common.you'), body: note.trim(), at: now(), mine: true });
   t.status = 'pendingReview';
   t.currentLevel = 1;
   t.reviewerNote = undefined;
   t.reviewerName = undefined;
-  log(id, resubmit ? 'You resubmitted for review' : 'You submitted for review');
+  log(id, resubmit ? tr('activity.resubmitted') : tr('activity.submitted'));
 }
 
 // Later: POST /api/tasks/{id}/withdraw
 export async function withdrawTask(id: number): Promise<void> {
   await wait(600);
   const t = find(id);
-  if (!canWithdraw(t)) throw new TaskError('Your supervisor has already started reviewing this task.');
+  if (!canWithdraw(t)) throw new TaskError(tr('task.err.reviewStarted'));
   t.status = 'inProgress';
   t.currentLevel = 0;
-  log(id, 'You withdrew the submission');
+  log(id, tr('activity.withdrew'));
 }

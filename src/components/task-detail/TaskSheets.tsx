@@ -7,6 +7,7 @@ import { BottomSheet } from '../ui/BottomSheet';
 import type { TaskDetail } from '../../types/task';
 import { colors, fonts, radius, space } from '../../theme';
 import { MAX_FILE_MB } from '../../utils/files';
+import { chevron, t } from '../../i18n';
 
 // ---------- Decline ----------
 export function DeclineSheet({
@@ -33,25 +34,25 @@ export function DeclineSheet({
   }, [visible]);
 
   function confirm() {
-    if (reason.trim().length < 10) return setError('Please write at least 10 characters.');
+    if (reason.trim().length < 10) return setError(t('sheets.reasonMin'));
     onConfirm(reason.trim());
   }
 
   return (
-    <BottomSheet visible={visible} onClose={onClose} title="Decline this task?" subtitle={`${assignedBy} will see your reason and can give it to someone else.`}>
+    <BottomSheet visible={visible} onClose={onClose} title={t('sheets.declineTitle')} subtitle={t('sheets.declineSub', { name: assignedBy })}>
       <View style={styles.field}>
-        <AppText variant="label">Reason *</AppText>
+        <AppText variant="label">{t('sheets.reason')}</AppText>
         <TextInput
           value={reason}
-          onChangeText={(t) => {
-            setReason(t);
+          onChangeText={(v) => {
+            setReason(v);
             if (error) setError(null);
           }}
-          placeholder="For example: I am on leave on that day"
+          placeholder={t('sheets.reasonPh')}
           placeholderTextColor={colors.muted}
           multiline
           style={[styles.textArea, error ? styles.textAreaError : null]}
-          accessibilityLabel="Reason for declining"
+          accessibilityLabel={t('sheets.reasonA11y')}
           editable={!loading}
         />
         {error ? (
@@ -61,8 +62,8 @@ export function DeclineSheet({
         ) : null}
       </View>
       <View style={styles.row}>
-        <AppButton title="Cancel" variant="secondary" onPress={onClose} disabled={loading} style={styles.flex} />
-        <AppButton title="Decline task" variant="danger" onPress={confirm} loading={loading} style={styles.flex} />
+        <AppButton title={t('common.cancel')} variant="secondary" onPress={onClose} disabled={loading} style={styles.flex} />
+        <AppButton title={t('sheets.declineBtn')} variant="danger" onPress={confirm} loading={loading} style={styles.flex} />
       </View>
     </BottomSheet>
   );
@@ -96,32 +97,32 @@ export function SubmitSheet({
     <BottomSheet
       visible={visible}
       onClose={onClose}
-      title={resubmit ? 'Resubmit for review?' : 'Submit for review?'}
-      subtitle={first ? `${first.name} (${first.role}) will review it first.` : undefined}
+      title={resubmit ? t('sheets.resubmitTitle') : t('sheets.submitTitle')}
+      subtitle={first ? t('sheets.firstReviewer', { name: first.name, role: first.role }) : undefined}
     >
       <View style={styles.summary}>
-        <SummaryRow ok={done === total} text={`Checklist ${done} of ${total} done`} />
+        <SummaryRow ok={done === total} text={t('sheets.checklistSummary', { done, total })} />
         <SummaryRow
           ok={task.attachments.length > 0}
-          text={task.attachments.length > 0 ? `${task.attachments.length} file(s) attached` : 'No files attached. Add proof if this task needs it.'}
+          text={task.attachments.length > 0 ? t('sheets.filesAttached', { n: task.attachments.length }) : t('sheets.noFiles')}
         />
       </View>
       <View style={styles.field}>
-        <AppText variant="label">Note for the reviewer (optional)</AppText>
+        <AppText variant="label">{t('sheets.note')}</AppText>
         <TextInput
           value={note}
           onChangeText={setNote}
-          placeholder={resubmit ? 'What did you fix?' : 'Anything the reviewer should know'}
+          placeholder={resubmit ? t('sheets.notePhFix') : t('sheets.notePh')}
           placeholderTextColor={colors.muted}
           multiline
           style={styles.textArea}
-          accessibilityLabel="Note for the reviewer"
+          accessibilityLabel={t('sheets.noteA11y')}
           editable={!loading}
         />
       </View>
       <View style={styles.row}>
-        <AppButton title="Not yet" variant="secondary" onPress={onClose} disabled={loading} style={styles.flex} />
-        <AppButton title={resubmit ? 'Resubmit' : 'Submit'} onPress={() => onConfirm(note)} loading={loading} style={styles.flex} />
+        <AppButton title={t('sheets.notYet')} variant="secondary" onPress={onClose} disabled={loading} style={styles.flex} />
+        <AppButton title={resubmit ? t('sheets.resubmitBtn') : t('sheets.submitBtn')} onPress={() => onConfirm(note)} loading={loading} style={styles.flex} />
       </View>
     </BottomSheet>
   );
@@ -154,12 +155,12 @@ export function WithdrawSheet({
     <BottomSheet
       visible={visible}
       onClose={onClose}
-      title="Withdraw your submission?"
-      subtitle="The task comes back to you so you can change files or the checklist. Your supervisor will be told."
+      title={t('sheets.withdrawTitle')}
+      subtitle={t('sheets.withdrawSub')}
     >
       <View style={styles.row}>
-        <AppButton title="Keep it submitted" variant="secondary" onPress={onClose} disabled={loading} style={styles.flex} />
-        <AppButton title="Withdraw" variant="accent" onPress={onConfirm} loading={loading} style={styles.flex} />
+        <AppButton title={t('sheets.keep')} variant="secondary" onPress={onClose} disabled={loading} style={styles.flex} />
+        <AppButton title={t('sheets.withdrawBtn')} variant="accent" onPress={onConfirm} loading={loading} style={styles.flex} />
       </View>
     </BottomSheet>
   );
@@ -170,13 +171,13 @@ type Source = 'camera' | 'gallery' | 'document';
 
 export function AttachSheet({ visible, onClose, onPick }: { visible: boolean; onClose: () => void; onPick: (source: Source) => void }) {
   const options: { key: Source; icon: keyof typeof Ionicons.glyphMap; title: string; hint: string }[] = [
-    { key: 'camera', icon: 'camera-outline', title: 'Take a photo', hint: 'Use your camera' },
-    { key: 'gallery', icon: 'images-outline', title: 'Choose from gallery', hint: 'Photos on your phone' },
-    { key: 'document', icon: 'document-outline', title: 'Pick a document', hint: 'PDF, Word or Excel' },
+    { key: 'camera', icon: 'camera-outline', title: t('attach.camera'), hint: t('attach.cameraHint') },
+    { key: 'gallery', icon: 'images-outline', title: t('attach.gallery'), hint: t('attach.galleryHint') },
+    { key: 'document', icon: 'document-outline', title: t('attach.doc'), hint: t('attach.docHint') },
   ];
 
   return (
-    <BottomSheet visible={visible} onClose={onClose} title="Add a file" subtitle={`Up to ${MAX_FILE_MB} MB per file.`}>
+    <BottomSheet visible={visible} onClose={onClose} title={t('attach.title')} subtitle={t('attach.limit', { mb: MAX_FILE_MB })}>
       <View style={styles.options}>
         {options.map((o) => (
           <Pressable
@@ -194,7 +195,7 @@ export function AttachSheet({ visible, onClose, onPick }: { visible: boolean; on
                 {o.hint}
               </AppText>
             </View>
-            <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+            <Ionicons name={chevron('forward')} size={18} color={colors.muted} />
           </Pressable>
         ))}
       </View>

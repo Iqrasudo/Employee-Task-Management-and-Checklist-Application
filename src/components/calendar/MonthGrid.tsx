@@ -3,8 +3,9 @@ import { Animated, Pressable, StyleSheet, View } from 'react-native';
 import { AppText } from '../ui/AppText';
 import type { Task } from '../../types/task';
 import { colors, motion, radius, space, statusColors } from '../../theme';
-import { dateKey, monthMatrix, WEEKDAYS } from '../../utils/calendar';
+import { dateKey, monthMatrix } from '../../utils/calendar';
 import { isOverdue } from '../../utils/date';
+import { monthName, t, tn, weekdaysShort } from '../../i18n';
 
 type Props = {
   year: number;
@@ -14,8 +15,6 @@ type Props = {
   onSelect: (day: Date) => void;
   direction: 1 | -1; // which way the month slid, for the animation
 };
-
-const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 // Colour of a task's dot: same colours as the status badges.
 function dotColor(t: Task): string {
@@ -38,7 +37,7 @@ export function MonthGrid({ year, month, selectedKey, tasksByDay, onSelect, dire
   return (
     <View style={styles.wrap}>
       <View style={styles.row}>
-        {WEEKDAYS.map((d) => (
+        {weekdaysShort().map((d) => (
           <View key={d} style={styles.cell}>
             <AppText variant="caption" color={colors.muted}>
               {d}
@@ -68,8 +67,8 @@ export function MonthGrid({ year, month, selectedKey, tasksByDay, onSelect, dire
                   onPress={() => onSelect(day)}
                   accessibilityRole="button"
                   accessibilityState={{ selected: isSelected }}
-                  accessibilityLabel={`${day.getDate()} ${MONTH_NAMES[day.getMonth()]}${isToday ? ', today' : ''}, ${
-                    tasks.length ? `${tasks.length} ${tasks.length === 1 ? 'task' : 'tasks'}` : 'no tasks'
+                  accessibilityLabel={`${day.getDate()} ${monthName(day.getMonth())}${isToday ? t('cal.todayA11y') : ''}, ${
+                    tasks.length ? tn('count.tasks', tasks.length) : t('cal.noTasks')
                   }`}
                   style={[styles.cell, styles.dayCell, isSelected ? styles.selected : null]}
                 >

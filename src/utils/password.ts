@@ -1,12 +1,14 @@
 // Password rules shown live while the user types. Keep these the same as the
 // ASP.NET Core Identity password options on the backend.
-export type PasswordRule = { id: string; label: string; test: (value: string) => boolean };
+import { t } from '../i18n';
+
+export type PasswordRule = { id: string; readonly label: string; test: (value: string) => boolean };
 
 export const passwordRules: PasswordRule[] = [
-  { id: 'length', label: 'At least 8 characters', test: (v) => v.length >= 8 },
-  { id: 'upper', label: 'One capital letter (A–Z)', test: (v) => /[A-Z]/.test(v) },
-  { id: 'number', label: 'One number (0–9)', test: (v) => /\d/.test(v) },
-  { id: 'symbol', label: 'One symbol (like @ # !)', test: (v) => /[^A-Za-z0-9]/.test(v) },
+  { id: 'length', get label() { return t('pw.length'); }, test: (v) => v.length >= 8 },
+  { id: 'upper', get label() { return t('pw.upper'); }, test: (v) => /[A-Z]/.test(v) },
+  { id: 'number', get label() { return t('pw.number'); }, test: (v) => /\d/.test(v) },
+  { id: 'symbol', get label() { return t('pw.symbol'); }, test: (v) => /[^A-Za-z0-9]/.test(v) },
 ];
 
 export const isStrongPassword = (value: string) => passwordRules.every((rule) => rule.test(value));
